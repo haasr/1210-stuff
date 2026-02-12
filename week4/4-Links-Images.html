@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSCI-1210: Links, Images & Web Design Lifecycle</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://csci-1250.github.io/class_resources_public/templates/css/slides_primary_theme.css">
+
+    <!-- Prism CSS for syntax highlighting -->
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.27.0/themes/prism.css" rel="stylesheet" />
+
+    <!-- jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Prism JS for syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.27.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.27.0/components/prism-markup.min.js"></script>
+
+    <style>
+        /* ── Attribute breakdown cards ── */
+        .attr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .attr-card {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .attr-card .attr-name {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 6px;
+        }
+        .attr-card p { font-size: 0.9em; margin: 0; color: #374151; }
+        .attr-card.required .attr-name::after {
+            content: " *";
+            color: #DC2626;
+        }
+
+        /* ── Path navigator ── */
+        .path-example {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 10px;
+            padding: 16px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            margin: 12px 0;
+        }
+        .path-example .path-comment { color: #6A9955; }
+        .path-example .path-tag     { color: #569cd6; }
+        .path-example .path-attr    { color: #9cdcfe; }
+        .path-example .path-val     { color: #ce9178; }
+
+        /* ── Format comparison table ── */
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .format-card {
+            border-radius: 12px;
+            padding: 18px;
+            border: 2px solid;
+        }
+        .format-card.gif  { background: #fef9c3; border-color: #ca8a04; }
+        .format-card.jpg  { background: #fdf2f8; border-color: #a21caf; }
+        .format-card.png  { background: #f0fdf4; border-color: #16a34a; }
+        .format-card h4 {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .format-card.gif  h4 { color: #92400e; }
+        .format-card.jpg  h4 { color: #86198f; }
+        .format-card.png  h4 { color: #166534; }
+        .format-card ul { list-style: none; padding: 0; margin: 0; font-size: 0.88em; }
+        .format-card ul li { padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.07); }
+        .format-card ul li:last-child { border: none; }
+        .check::before  { content: "✅ "; }
+        .cross::before  { content: "❌ "; }
+
+        /* ── File tree display ── */
+        .file-tree {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 10px;
+            padding: 18px 22px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .tree-folder { color: #569cd6; }
+        .tree-file   { color: #9cdcfe; }
+        .tree-root   { color: #DCDCAA; font-weight: bold; }
+
+        /* ── Tag spotlight ── */
+        .tag-spotlight {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .tag-spotlight .big-tag {
+            font-family: 'Courier New', monospace;
+            font-size: 3em;
+            font-weight: 700;
+            color: #DC2626;
+            background: #fff1f2;
+            border: 3px solid #fca5a5;
+            border-radius: 12px;
+            display: inline-block;
+            padding: 10px 30px;
+            margin: 15px 0;
+        }
+
+        /* ── Quiz slides ── */
+        .quiz-card {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 24px 28px;
+            margin: 10px 0;
+        }
+        .quiz-card .question {
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 16px;
+        }
+        .quiz-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 14px;
+            margin: 6px 0;
+            border-radius: 8px;
+            background: white;
+            border: 1.5px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95em;
+        }
+        .quiz-option:hover { border-color: #f59e0b; background: #fffbeb; }
+        .quiz-option .opt-letter {
+            font-weight: 700;
+            color: #f59e0b;
+            min-width: 22px;
+        }
+        .quiz-option.correct  { background: #f0fdf4; border-color: #22c55e; }
+        .quiz-option.incorrect { background: #fff1f2; border-color: #ef4444; }
+        .quiz-option.correct  .opt-letter { color: #16a34a; }
+        .quiz-option.incorrect .opt-letter { color: #dc2626; }
+        .quiz-reveal {
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            border-radius: 0 8px 8px 0;
+            display: none;
+            font-size: 0.9em;
+            color: #166534;
+        }
+        .reveal-btn {
+            margin-top: 14px;
+            padding: 8px 20px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .reveal-btn:hover { background: #d97706; }
+
+        /* ── Persona card ── */
+        .persona-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .persona-card .persona-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1e3a5f, #2563EB);
+            color: white;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .persona-section h5 {
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6B7280;
+            margin-bottom: 8px;
+        }
+        .persona-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.88em;
+        }
+        .persona-section ul li { padding: 3px 0; }
+        .persona-section ul li::before { content: "• "; color: #2563EB; }
+
+        /* ── URL type comparison ── */
+        .url-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .url-box {
+            border-radius: 12px;
+            padding: 18px;
+            border: 2px solid;
+        }
+        .url-box.absolute { background: #fdf4ff; border-color: #a855f7; }
+        .url-box.relative { background: #f0fdf4; border-color: #22c55e; }
+        .url-box h4 { font-size: 1em; font-weight: 700; margin-bottom: 10px; }
+        .url-box.absolute h4 { color: #7e22ce; }
+        .url-box.relative h4 { color: #166534; }
+        .url-box code {
+            display: block;
+            background: rgba(0,0,0,0.06);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.85em;
+            margin: 8px 0;
+            word-break: break-all;
+        }
+
+        /* ── Resolution stat ── */
+        .stat-highlight {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #DC2626, #b91c1c);
+            color: white;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+        .stat-highlight .big-num {
+            font-size: 3em;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-highlight p { margin: 5px 0 0; opacity: 0.9; }
+
+        /* ── User group cards ── */
+        .user-group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin: 16px 0;
+        }
+        .user-group-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .user-group-card .icon { font-size: 2em; margin-bottom: 8px; }
+        .user-group-card h4 { font-size: 0.95em; font-weight: 700; color: #1e3a5f; margin-bottom: 6px; }
+        .user-group-card p  { font-size: 0.82em; color: #6B7280; margin: 0; }
+
+        /* quiz number badge */
+        .quiz-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9em;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading overlay for PDF generation -->
+    <div class="pdf-loading" id="pdfLoading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="progress-text" id="progressText">Generating PDF...</div>
+            <div style="font-size: 0.9em; margin-bottom: 15px;">
+                <span id="slideCounter">Slide 0 of 0</span>
+            </div>
+            <div class="slide-progress">
+                <div class="slide-progress-fill" id="slideProgressFill" style="width: 0%"></div>
+            </div>
+            <div style="font-size: 0.8em; margin-top: 15px; opacity: 0.8;">This may take a few moments...</div>
+        </div>
+    </div>
+
+    <div class="presentation-container">
+        <div class="header">
+            <h1>CSCI-1210: Links, Images &amp; Web Design Lifecycle</h1>
+            <div class="header-right">
+                <button class="download-btn" id="downloadPDF" onclick="generatePDF()">
+                    <span class="download-icon">📄</span>
+                    <span>Download PDF</span>
+                </button>
+                <div class="slide-counter">
+                    <span id="current-slide">1</span> / <span id="total-slides">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div class="slide-content">
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 1 — Title
+            ══════════════════════════════════════════════ -->
+            <div class="slide active">
+                <div class="slide-title">Links and Images</div>
+                <div style="text-align:center; margin-top:40px;">
+                    <div style="font-size:1.4em; color:#1F2937; margin-bottom:28px;">CSCI 1210 · Essentials of Web Development</div>
+                    <div style="background: linear-gradient(135deg, #1e3a5f, #2563EB); color:white; padding:30px; border-radius:15px; max-width:800px; margin:0 auto;">
+                        <p style="font-size:1.15em; margin-bottom:15px;"><strong>Today's Topics:</strong></p>
+                        <ul style="list-style:none; font-size:1.05em; text-align:left; display:inline-block;">
+                            <li style="padding:8px 0;">🔗 HTML Links — the <code>&lt;a&gt;</code> element</li>
+                            <li style="padding:8px 0;">📁 Absolute vs. Relative URLs &amp; paths</li>
+                            <li style="padding:8px 0;">🖼️ HTML Images — the <code>&lt;img&gt;</code> element</li>
+                            <li style="padding:8px 0;">📐 Image formats, resolution &amp; optimization</li>
+                            <li style="padding:8px 0;">👤 Web Design Lifecycle: Users &amp; Requirements</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top:20px; color:#6B7280; font-size:0.9em;">East Tennessee State University · Department of Computing</div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SECTION DIVIDER — Links
+            ══════════════════════════════════════════════ -->
+            <div class="slide" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563EB 100%); color: white; padding: 12vw;">
+                <div class="section-label">Part 1</div>
+                <span style="font-size: 3.6em; margin-right: 2vw;">🔗 Links</span><span style="font-size: 2em; color: #dadada;">What makes the Web the Web</span>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 3 — What are links?
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">What Makes the Web the Web</div>
+                <div class="highlight-box">
+                    <h3>Hyperlinks Changed Everything</h3>
+                    <p style="font-size:1.1em; line-height:1.6;">
+                        One of the things that makes the web unique is <strong>hyperlinks</strong>. They changed the way consumers interact with content — no longer a linear, start-to-finish activity.
+                    </p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Before Links</h3>
+                        <ul class="bullet-points">
+                            <li>Content consumed top-to-bottom</li>
+                            <li>Linear, start-to-finish</li>
+                            <li>Like reading a book</li>
+                            <li>No jumping between sources</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>With Hyperlinks</h3>
+                        <ul class="bullet-points">
+                            <li>Users follow a "breadcrumb trail"</li>
+                            <li>Jump site-to-site, or within a site</li>
+                            <li>Find exactly the content they want</li>
+                            <li>Non-linear exploration</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 4 — The <a> element
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">The Anchor Element</div>
+                <div class="tag-spotlight">
+                    <p style="color:#6B7280; font-size:1.1em;">The element that creates a hyperlink:</p>
+                    <div class="big-tag">&lt;a&gt;</div>
+                    <p style="max-width:600px; margin:0 auto; font-size:1.05em; color:#374151; line-height:1.6;">
+                        Whatever appears between <code>&lt;a&gt;</code> and <code>&lt;/a&gt;</code> becomes a clickable link.
+                    </p>
+                </div>
+                <div class="highlight-box yellow">
+                    <h3>🎨 Default Browser Styling</h3>
+                    <p>By default, links are displayed <span style="color:blue; text-decoration:underline;">blue and underlined</span>. CSS can override this.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 5 — href attribute
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Where to Go — <code>href</code></div>
+                <div class="highlight-box blue">
+                    <h3>href = "hypertext reference"</h3>
+                    <p>An HTML-speak way of saying <em>"address"</em> — tells the browser where to go when the user clicks the link.</p>
+                </div>
+                <div class="code-block"><pre><code class="language-html">&lt;a href="https://www.csci1210.com"&gt;CSCI 1210&lt;/a&gt;</code></pre></div>
+                <div class="output-block" style="margin-top:16px; background-color: #ece5b8;">
+                    <div class="comment" style="color: #1e1e1e;">// Will display like this:</div>
+                    <div style="margin-top:10px;"><a href="#" style="color:blue; text-decoration:underline; pointer-events:none;">CSCI 1210</a></div>
+                </div>
+                <div class="info-grid" style="margin-top:20px;">
+                    <div class="info-card">
+                        <h3>Remember: Attributes</h3>
+                        <ul class="bullet-points">
+                            <li>Go inside the <em>opening</em> tag</li>
+                            <li>Provide extra info to the browser</li>
+                            <li>Make the page behave correctly</li>
+                            <li>Format: <code>name="value"</code></li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>href Values</h3>
+                        <ul class="bullet-points">
+                            <li>Absolute URLs (other sites)</li>
+                            <li>Relative URLs (your own site)</li>
+                            <li>Page fragments (<code>#section-id</code>)</li>
+                            <li>Other protocols (<code>mailto:</code>, <code>ftp:</code>)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 6 — Absolute vs Relative
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Two Types of URLs</div>
+                <div class="url-compare">
+                    <div class="url-box absolute">
+                        <h4>🌐 Absolute URL</h4>
+                        <p style="font-size:0.88em; margin-bottom:10px;">Points to another website. Provides the <em>entire</em> URL — a unique, unchanging point on the web.</p>
+                        <code>href="http://www.example.com/default.html"</code>
+                        <p style="font-size:0.82em; margin-top:10px; color:#6B7280;">Easy to spot — always contains <strong>http://</strong> or <strong>https://</strong></p>
+                    </div>
+                    <div class="url-box relative">
+                        <h4>📁 Relative URL</h4>
+                        <p style="font-size:0.88em; margin-bottom:10px;">Points to a file <em>within your own site</em>. The path is relative to the current document's location.</p>
+                        <code>href="default.html"</code>
+                        <code>href="#top"</code>
+                        <p style="font-size:0.82em; margin-top:10px; color:#6B7280;">No <code>http://</code> — just a filename or path.</p>
+                    </div>
+                </div>
+                <div class="highlight-box yellow" style="margin-top:14px;">
+                    <h3>The Rule</h3>
+                    <p><strong>Linking within your own site?</strong> Use <em>relative</em> URLs.<br>
+                    <strong>Linking to another site?</strong> Use <em>absolute</em> URLs.<br>
+                    Relative URLs are shorter, portable, and faster (no DNS lookup needed).</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 7 — Navigating the file tree
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Navigating the File Tree</div>
+                <div class="highlight-box blue">
+                    <h3>Think of Your Files as a Tree</h3>
+                    <p>Big branches = main folders · Smaller branches = sub-folders · Leaves = files. Any branch can have 0, 1, or many leaves.</p>
+                </div>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="file-tree">
+<span class="tree-root">csci1210.com/</span>
+├── <span class="tree-folder">assignments/</span>
+│   └── <span class="tree-folder">hw4/</span>
+│       ├── <span class="tree-file">hw4.html</span>
+│       ├── <span class="tree-folder">css/</span>
+│       │   └── <span class="tree-file">hw4.css</span>
+│       └── <span class="tree-folder">images/</span>
+│           ├── <span class="tree-file">001.jpg</span>
+│           └── <span class="tree-file">002.jpg</span>
+├── <span class="tree-folder">labs/</span>
+│   ├── <span class="tree-file">lab1.html</span>
+│   └── <span class="tree-file">lab9.html</span>
+└── <span class="tree-file">index.html</span>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="info-card blue" style="height:100%;">
+                            <h3>🔑 Key Concepts</h3>
+                            <ul class="bullet-points">
+                                <li><strong>Parent</strong> — folder containing another folder</li>
+                                <li><strong>Child</strong> — folder inside a parent</li>
+                                <li><strong>Grandparent/grandchild</strong> — two levels up/down</li>
+                                <li><code>..</code> — go up one level</li>
+                                <li><code>../</code> — "back out" of a directory</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 8 — Making internal links
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Making Internal Links</div>
+
+                <div class="row">
+                    <div class="col-8">
+                        <div class="code-block"><pre><code class="language-html">&lt;!-- Same directory --&gt;
+&lt;a href="myinterests.html"&gt;My Interests&lt;/a&gt;
+
+&lt;!-- Subdirectory (going down) --&gt;
+&lt;a href="hw2/homework2.html"&gt;Homework 2&lt;/a&gt;
+
+&lt;!-- Going UP one level --&gt;
+&lt;a href="../index.html"&gt;Home&lt;/a&gt;
+
+&lt;!-- Going UP two levels --&gt;
+&lt;a href="../../index.html"&gt;Home&lt;/a&gt;</code></pre></div>
+                    </div>
+                    <div class="col-4">
+                        <div class="output-block">
+                            <div class="comment">// Scenario summary:</div>
+                            <br>
+                            <div class="output-line"><strong>Same dir:</strong> filename only</div>
+                            <div class="output-line"><strong>Going down:</strong> folder/file.html</div>
+                            <div class="output-line"><strong>Going up:</strong> ../file.html</div>
+                            <div class="output-line"><strong>Up 2 levels:</strong> ../../file.html</div>
+                            <br>
+                            <div class="comment">// No leading "/" for relative!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box yellow" style="margin-top:16px;">
+                    <h3>⚠️ Common Gotcha</h3>
+                    <p>When going into a sub-folder, do <strong>not</strong> start with a slash — <code>hw2/homework2.html</code> is correct; <code>/hw2/homework2.html</code> starts from the web root instead.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 9 — Fragment / in-page links
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Links Within a Page (Fragments)</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>1️⃣ Name the Target</h3>
+                        <p>Give the destination element an <code>id</code>:</p>
+                        <div class="code-block"><pre><code class="language-html">&lt;h1 id="top"&gt;Top of Page&lt;/h1&gt;
+
+&lt;p id="footer"&gt;This is the bottom&lt;/p&gt;</code></pre></div>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>2️⃣ Link to the Fragment</h3>
+                        <p>Use <code>#</code> followed by the id:</p>
+                        <div class="code-block"><pre><code class="language-html">&lt;a href="#top"&gt;Back to top&lt;/a&gt;
+
+&lt;a href="#footer"&gt;Go to bottom&lt;/a&gt;</code></pre></div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top:16px;">
+                    <h3>📱 Common Use Cases</h3>
+                    <ul class="bullet-points">
+                        <li>"Back to top" buttons on long pages</li>
+                        <li>Tables of contents (clicking a chapter heading jumps to it)</li>
+                        <li>Single-page sites with anchor navigation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 10 — mailto + target
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Special Link Types</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>mailto: Links</h3>
+                        <div class="code-block"><pre><code class="language-html">&lt;a href="mailto:someone@example.com"&gt;
+  Email Us
+&lt;/a&gt;</code></pre></div>
+                        <ul class="bullet-points" style="margin-top:12px;">
+                            <li>Opens the user's default mail client</li>
+                            <li>Addressed to the specified email</li>
+                            <li>Requires a default email app to be set</li>
+                            <li>Rarely used in modern web development</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>target="_blank"</h3>
+                        <div class="code-block"><pre><code class="language-html">&lt;a href="https://etsu.edu"
+   target="_blank"&gt;
+  ETSU
+&lt;/a&gt;</code></pre></div>
+                        <ul class="bullet-points" style="margin-top:12px;">
+                            <li>Opens the link in a <em>new tab</em></li>
+                            <li>Keeps your site open in the original tab</li>
+                            <li>Good for external links</li>
+                            <li>Default behavior overwrites current page</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 11 — Links summary
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Links — Summary</div>
+                <div style="max-width:720px; margin:0 auto;">
+                    <table class="type-table">
+                        <thead>
+                            <tr><th>Concept</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>&lt;a&gt;</strong></td><td>The HTML anchor tag — creates a hyperlink</td></tr>
+                            <tr><td><strong>href</strong></td><td>"Hypertext reference" — the destination address</td></tr>
+                            <tr><td><strong>Absolute URL</strong></td><td>Full path including <code>http://</code> — for external sites</td></tr>
+                            <tr><td><strong>Relative URL</strong></td><td>Partial path — for pages within your own site</td></tr>
+                            <tr><td><strong>Fragment (#id)</strong></td><td>Jump to a specific element on the page</td></tr>
+                            <tr><td><strong>target="_blank"</strong></td><td>Open link in a new browser tab</td></tr>
+                            <tr><td><strong>mailto:</strong></td><td>Open the user's email client</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="highlight-box yellow" style="margin-top:16px;">
+                        <h3>📏 The Golden Rule</h3>
+                        <p>Use <strong>relative URLs</strong> for links within your site. Use <strong>absolute URLs</strong> for any other site. Path is important — test your links!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SECTION DIVIDER — Images
+            ══════════════════════════════════════════════ -->
+
+            <div class="slide" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563EB 100%); color: white; padding: 12vw;">
+                <div class="section-label">Part 2</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr;">
+                    <h2 style="font-size: 3.8em; margin-right: 2vw;">Images</h2>
+                    <div style="font-size: 2em; color: #dadada;">Adding, formatting, and optimizing images for the web</div>
+                </div>
+            </div>
+            
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 13 — Why Images Matter
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Images on the Web</div>
+                <div class="highlight-box">
+                    <h3>"A Picture is Worth a Thousand Words"</h3>
+                    <p style="font-size:1.1em; line-height:1.6;">Images are an important part of the web experience. Knowing how to make a raw image suitable for the web is a critical skill for any developer.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>📸 What We'll Cover</h3>
+                        <ul class="bullet-points">
+                            <li>The <code>&lt;img&gt;</code> HTML element</li>
+                            <li>Required &amp; optional attributes</li>
+                            <li>Image file formats</li>
+                            <li>Captions with <code>&lt;figure&gt;</code></li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Optimization Skills</h3>
+                        <ul class="bullet-points">
+                            <li>Understanding resolution (PPI)</li>
+                            <li>File size vs. quality trade-offs</li>
+                            <li>Resizing &amp; cropping with GIMP</li>
+                            <li>Compression ratios</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 14 — <img> element
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">The <code>&lt;img&gt;</code> Element</div>
+                <div class="tag-spotlight">
+                    <div class="big-tag">&lt;img&gt;</div>
+                    <p style="font-size:1em; color:#6B7280; margin-top:5px;">Standalone (self-closing) · Inline element</p>
+                </div>
+                <div class="attr-grid">
+                    <div class="attr-card required">
+                        <div class="attr-name">src</div>
+                        <p>Source URL for the image — absolute or relative path</p>
+                    </div>
+                    <div class="attr-card required">
+                        <div class="attr-name">alt</div>
+                        <p>Alternative text — required for accessibility &amp; validation</p>
+                    </div>
+                    <div class="attr-card">
+                        <div class="attr-name">title</div>
+                        <p>Optional title — appears as a tooltip on hover (in some browsers)</p>
+                    </div>
+                </div>
+                <div class="code-block"><pre><code class="language-html">&lt;img src="images/globe.jpg" alt="globe picture" title="globe picture"&gt;</code></pre></div>
+                <p style="font-size:0.85em; color:#6B7280; margin-top:8px;">* = required attribute</p>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 15 — alt attribute importance
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">The <code>alt</code> Attribute</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Accessibility</h3>
+                        <ul class="bullet-points">
+                            <li>Screen readers speak the <code>alt</code> text aloud</li>
+                            <li>Critical for users with visual impairments</li>
+                            <li>Displays when the image fails to load</li>
+                            <li>Required for HTML validation</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Writing Good Alt Text</h3>
+                        <ul class="bullet-points">
+                            <li>Describe what the image actually shows</li>
+                            <li>Be concise but descriptive</li>
+                            <li>Don't start with "image of…" — the browser already knows</li>
+                            <li>Decorative images: <code>alt=""</code> (empty string)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="code-block" style="margin-top:16px;"><pre><code class="language-html">&lt;!-- Good --&gt;
+&lt;img src="campus.jpg" alt="ETSU Sherrod Library with autumn leaves"&gt;
+
+&lt;!-- Bad --&gt;
+&lt;img src="campus.jpg" alt="image"&gt;
+&lt;img src="campus.jpg" alt="campus.jpg"&gt;</code></pre></div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 16 — Image formats
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Image Formats</div>
+                <div class="format-grid">
+                    <div class="format-card gif">
+                        <h4>GIF</h4>
+                        <p style="font-size:0.8em; color:#78350f; margin-bottom:10px;">Graphics Interchange Format</p>
+                        <ul>
+                            <li class="check">Small file sizes</li>
+                            <li class="check">Transparent backgrounds</li>
+                            <li class="check">Can be animated</li>
+                            <li class="check">Good for logos, icons, cartoons</li>
+                            <li class="cross">Only 256 colors</li>
+                            <li class="cross">Not good for photos</li>
+                        </ul>
+                    </div>
+                    <div class="format-card jpg">
+                        <h4>JPG / JPEG</h4>
+                        <p style="font-size:0.8em; color:#701a75; margin-bottom:10px;">Joint Photographic Experts Group</p>
+                        <ul>
+                            <li class="check">16+ million colors</li>
+                            <li class="check">Great for photos</li>
+                            <li class="check">Lossy compression → small files</li>
+                            <li class="cross">No transparent backgrounds</li>
+                            <li class="cross">Cannot be animated</li>
+                            <li class="cross">Not ideal for logos/icons</li>
+                        </ul>
+                    </div>
+                    <div class="format-card png">
+                        <h4>PNG</h4>
+                        <p style="font-size:0.8em; color:#14532d; margin-bottom:10px;">Portable Network Graphics</p>
+                        <ul>
+                            <li class="check">16+ million colors</li>
+                            <li class="check">Transparent backgrounds (PNG-24/32)</li>
+                            <li class="check">Lossless compression</li>
+                            <li class="check">Good for logos, icons, cartoons</li>
+                            <li class="cross">Larger file sizes than JPG</li>
+                            <li class="cross">Cannot be animated</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 17 — figure and figcaption
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Captions — <code>&lt;figure&gt;</code> &amp; <code>&lt;figcaption&gt;</code></div>
+                <div class="highlight-box blue">
+                    <h3>Adding Captions to Images</h3>
+                    <p>The <code>&lt;figure&gt;</code> element wraps an image and its caption together as a semantic unit. Use <code>&lt;figcaption&gt;</code> inside it for the caption text.</p>
+                </div>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="code-block"><pre><code class="language-html">&lt;figure&gt;
+  &lt;img src="images/globe.jpg"
+       alt="globe picture"&gt;
+  &lt;figcaption&gt;Glass Globe&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre></div>
+                    </div>
+                    <div class="col-5">
+                        <div class="output-block">
+                            <div class="comment">// Browser renders:</div>
+                            <div style="margin-top:10px; text-align:center;">
+                                <div style="width:100px; height:100px; background:#e2e8f0; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:2.5em;">🌍</div>
+                                <p style="font-size:0.9em; color:#6B7280; margin-top:8px;">Glass Globe</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight-box yellow" style="margin-top:16px;">
+                    <h3>Why Use figure?</h3>
+                    <p>It's <em>semantic HTML</em> — it tells the browser (and screen readers) that the image and caption belong together as a unit. Better than wrapping in a <code>&lt;div&gt;</code>.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 18 — Image Links
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Image Links</div>
+                <div class="highlight-box">
+                    <h3>Using an Image as a Link</h3>
+                    <p>Instead of using text for a link's display, you can use an image. Simply <em>nest</em> an <code>&lt;img&gt;</code> inside an <code>&lt;a&gt;</code> tag.</p>
+                </div>
+                <div class="code-block"><pre><code class="language-html">&lt;a href="https://csci1210.com/index.html" target="_blank"&gt;
+  &lt;img src="images/etsulogo.png" alt="ETSU logo"&gt;
+&lt;/a&gt;</code></pre></div>
+                <div class="info-grid" style="margin-top:16px;">
+                    <div class="info-card">
+                        <h3>Key Concept: Nesting</h3>
+                        <ul class="bullet-points">
+                            <li>The <code>&lt;img&gt;</code> is nested <em>inside</em> the <code>&lt;a&gt;</code></li>
+                            <li>The entire image becomes clickable</li>
+                            <li>We'll do a lot of nesting in this class</li>
+                            <li>Parent → child relationship</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Best Practices</h3>
+                        <ul class="bullet-points">
+                            <li>Always include <code>alt</code> text</li>
+                            <li>Use <code>target="_blank"</code> for external links</li>
+                            <li>Describe where the link goes in the alt text</li>
+                            <li>Consider adding a <code>title</code> attribute for clarity</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 19 — Resolution
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Image Resolution</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Resolution Defined</h3>
+                        <ul class="bullet-points">
+                            <li>Number of pixels per inch (PPI)</li>
+                            <li>Web standard: <strong>72 PPI</strong></li>
+                            <li>Print standard: <strong>300 PPI</strong></li>
+                            <li>Higher PPI = sharper but larger file</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Why Not Use 300 PPI for Web?</h3>
+                        <ul class="bullet-points">
+                            <li>Massive file size impact</li>
+                            <li>Screens can't display more than ~96 PPI anyway</li>
+                            <li>Wasted bytes = slower page loads</li>
+                            <li>File size is the #1 factor in page load time</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:16px; align-items:center;">
+                    <div class="col-6">
+                        <div class="stat-highlight">
+                            <div class="big-num">Two Words:</div>
+                            <p style="font-size:1.5em; font-weight:700; margin-top:5px;">File Size</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="highlight-box yellow">
+                            <h3>Not Everyone Has Fast Internet</h3>
+                            <ul class="bullet-points">
+                                <li>Satellite connections are slow</li>
+                                <li>3G/4G mobile is still common</li>
+                                <li>~3% of US adults still used dial-up as of 2013</li>
+                                <li>File size directly affects user satisfaction</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="slide-title">Magic Sizes that Impact Load Speed!</div>
+                <div class="highlight-box blue">
+                    <h3>&lt; 14 KB (The "Instant" Zone)</h3>
+                    <p>A "magic" rule of thumb, this is the limit for critical, above-the-fold content to load in a single round-trip (TCP slow start). Fitting initial HTML and CSS into this limit makes a site feel instantaneous.</p>
+                </div>
+                <div class="highlight-box blue">
+                    <h3>1 MB - 1.5 MB (Ideal Range)</h3>
+                    <p>The optimal size for a balance between rich content and speed</p>
+                </div>
+                <div class="highlight-box blue">
+                    <h3>&lt; 3 MB (MAX Recommended)</h3>
+                    <p>Going over 3 MB typically results in a slow, frustrating experience, particularly on mobile networks, leading to higher bounce rates.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Key Optimization Targets</h3>
+                        <ul class="bullet-points">
+                            <li>Images: Keep total image weight under 500 KB, with individual images ideally under 100–200 KB.</li>
+                            <li>Layout: Limit to 50–60 "blocks" of content to ensure rapid rendering.</li>
+                            <li>Code: Minify and compress CSS, JavaScript, and HTML, which can reduce file sizes by up to 60–90 %.</li>
+                            <li>Assets: Use lazy loading to defer loading of images, videos, and scripts until they are needed.</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>💡 Practical Tip</h3>
+                        <ul class="bullet-points">
+                            <li>Use the same logo file on every page</li>
+                            <li>Load it from the same location every time</li>
+                            <li>Browser downloads it once, caches it</li>
+                            <li>Every subsequent page loads it instantly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 20 — Browser Cache
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">The Browser Cache</div>
+                <div class="highlight-box blue">
+                    <h3>What is Caching?</h3>
+                    <p>The browser stores a local copy of recently downloaded files. If you revisit a site, it doesn't have to download everything again — it loads from the cache instead.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Cache Benefits</h3>
+                        <ul class="bullet-points">
+                            <li>Dramatically speeds up repeat visits</li>
+                            <li>Accessing local memory is very fast</li>
+                            <li>Reduces server bandwidth usage</li>
+                            <li>Better experience on slow connections</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>💡 Practical Tip</h3>
+                        <ul class="bullet-points">
+                            <li>Use the same logo file on every page</li>
+                            <li>Load it from the same location every time</li>
+                            <li>Browser downloads it once, caches it</li>
+                            <li>Every subsequent page loads it instantly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 21 — Optimizing Images
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Optimizing Images for the Web</div>
+                <div class="highlight-box">
+                    <h3>What Does "Optimize" Mean?</h3>
+                    <p>Edit image files so the resulting file size is as small as possible <em>without</em> unacceptably losing quality. Three main techniques:</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Cropping</h3>
+                        <p>Remove unimportant parts of the image. Only show what's relevant. Can dramatically reduce file size.</p>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Resizing</h3>
+                        <p>Reduce dimensions and/or resolution. A 1920×1080 photo doesn't need to be displayed full-res on a 400px column.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Compression</h3>
+                        <p>Increase JPEG compression ratio. Adjust the quality slider. A quality of 75–85 is often indistinguishable from 100 at a fraction of the size.</p>
+                    </div>
+                </div>
+                <div class="stat-highlight" style="margin-top:16px;">
+                    <div class="big-num">552 KB → 24 KB</div>
+                    <p>Real example: by adjusting resolution, dimensions &amp; compression — 4.3% of original file size, still looks great on a web page!</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 22 — GIMP
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Photo Editors</div>
+                <div class="highlight-box yellow">
+                    <h3>The Problem with Camera Photos</h3>
+                    <p>Most cameras — even cell phone cameras — take pictures that are <em>way too big</em> for web pages. Social media sites (Facebook, Instagram) resize automatically, but for your own site you need to do it yourself.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Adobe Photoshop</h3>
+                        <ul class="bullet-points">
+                            <li>Industry-standard photo editor</li>
+                            <li>Extremely powerful feature set</li>
+                            <li>Subscription-based (not free)</li>
+                            <li>Available in campus computer labs</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>GIMP</h3>
+                        <ul class="bullet-points">
+                            <li>GNU Image Manipulation Program</li>
+                            <li>Free and open source</li>
+                            <li>Comparable features to Photoshop</li>
+                            <li>Available for Windows, Mac, Linux</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top:12px;">
+                    <h3>Covered In Lab</h3>
+                    <p>Resizing (dimensions &amp; resolution), cropping, and compression — the bare basics of photo editing sufficient for web optimization.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SECTION DIVIDER — Web Design Lifecycle
+            ══════════════════════════════════════════════ -->
+
+            <div class="slide" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563EB 100%); color: white; padding: 12vw;">
+                <div class="section-label">Part 3</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr;">
+                    <h2 style="font-size: 3.8em; margin-right: 2vw;">Web Design Lifecycle</h2>
+                    <div style="font-size: 2em; color: #dadada;">Targeting Users &amp; Requirements Gathering</div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 24 — Targeted Site Users
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Targeted Site Users</div>
+                <div class="highlight-box">
+                    <h3>Who Are You Building For?</h3>
+                    <p style="font-size:1.1em;">Every well-designed site has a <strong>targeted set of users</strong>. You cannot create a site that appeals to everyone — and trying to do so results in a site that appeals to no one.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>👥 Why Define Users?</h3>
+                        <ul class="bullet-points">
+                            <li>Profile users based on site mission &amp; goals</li>
+                            <li>Define groups to focus the design</li>
+                            <li>Know what content and design will appeal</li>
+                            <li>Know what to leave out</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>📊 Where Information Comes From</h3>
+                        <ul class="bullet-points">
+                            <li>Client's marketing department</li>
+                            <li>Sales/marketing employees</li>
+                            <li>Existing website analysis</li>
+                            <li>Surveys &amp; customer research</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 25 — User Personas
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">User Personas</div>
+                <div class="highlight-box blue">
+                    <h3>What is a Persona?</h3>
+                    <p>A <strong>persona</strong> is a description of a hypothetical site user — their interests, goals, technology comfort, and concerns. We create one per targeted user group to guide design decisions.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>❓ Questions to Answer</h3>
+                        <ul class="bullet-points">
+                            <li>Who will visit this site?</li>
+                            <li>What do they have in common?</li>
+                            <li>What are their interests &amp; goals?</li>
+                            <li>What do they like / dislike?</li>
+                            <li>What technology do they use?</li>
+                        </ul>
+                    </div>
+                    <div class="info-card">
+                        <h3>📋 Focal User Characteristics</h3>
+                        <ul class="bullet-points">
+                            <li>Age ranges &amp; gender</li>
+                            <li>Education level &amp; occupation</li>
+                            <li>Computer &amp; web experience level</li>
+                            <li>Hobbies and personal goals</li>
+                            <li>Devices used (desktop, mobile, etc.)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 26 — Example Persona: Joan
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Example Persona — Joan</div>
+                <div class="persona-card">
+                    <div class="persona-header">
+                        <strong>Joan</strong> is a new teacher in her second year, recently certified. She's starting to get the hang of things but realizing how much she needs to improve. She wants to get better, but also wants to be smart about it.
+                    </div>
+                    <div class="persona-section">
+                        <h5>Needs</h5>
+                        <ul>
+                            <li>Measurable impact</li>
+                            <li>Project that self-manages</li>
+                        </ul>
+                    </div>
+                    <div class="persona-section">
+                        <h5>Wants</h5>
+                        <ul>
+                            <li>Something that doesn't take long to set up</li>
+                            <li>Products that integrate with existing tech</li>
+                        </ul>
+                    </div>
+                    <div class="persona-section">
+                        <h5>Values</h5>
+                        <ul>
+                            <li>Student growth</li>
+                            <li>Time savings</li>
+                            <li>Products that fit her current workflow</li>
+                        </ul>
+                    </div>
+                    <div class="persona-section">
+                        <h5>Fears</h5>
+                        <ul>
+                            <li>Cutting into already sparse free time</li>
+                            <li>Starting something unsustainable</li>
+                            <li>Doesn't actually improve student outcomes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 27 — User Groups example
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">User Groups — Case Study: Auto Parts Store</div>
+                <div class="highlight-box yellow">
+                    <h3>Sites Often Serve Multiple User Types</h3>
+                    <p>Group users by shared characteristics that distinguish them from other groups. Example: an auto parts store website.</p>
+                </div>
+                <div class="user-group-grid">
+                    <div class="user-group-card">
+                        <div class="icon">🔧</div>
+                        <h4>Professional Mechanics</h4>
+                        <p><strong>Use:</strong> Search by part # &amp; availability<br><strong>Concern:</strong> Delivery speed</p>
+                    </div>
+                    <div class="user-group-card">
+                        <div class="icon">🏎️</div>
+                        <h4>Hobbyists</h4>
+                        <p><strong>Use:</strong> Search by make / model / year<br><strong>Concern:</strong> Getting the right part</p>
+                    </div>
+                    <div class="user-group-card">
+                        <div class="icon">🛠️</div>
+                        <h4>DIY Repair</h4>
+                        <p><strong>Use:</strong> Parts by pictures / tutorials<br><strong>Concern:</strong> Price</p>
+                    </div>
+                    <div class="user-group-card">
+                        <div class="icon">📦</div>
+                        <h4>Resellers</h4>
+                        <p>May be a group — but client may choose <em>not</em> to target them</p>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top:14px;">
+                    <h3>Prioritizing Groups</h3>
+                    <p>Rank groups by importance to the client. The designer doesn't decide — the designer works with the client to build and prioritize user profiles. Some groups may be intentionally excluded.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SECTION DIVIDER — Requirements
+            ══════════════════════════════════════════════ -->
+            <div class="slide" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563EB 100%); color: white; padding: 12vw;">
+                <div class="section-label">Part 4</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr;">
+                    <h2 style="font-size: 3.8em; margin-right: 2vw;">Requirements Gathering</h2>
+                    <div style="font-size: 2em; color: #dadada;">Understanding what the site must do</div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 29 — What are Requirements
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Requirements</div>
+                <div class="highlight-box">
+                    <h3>What are Requirements?</h3>
+                    <p style="font-size:1.1em;">Requirements are the <strong>elements that must be present</strong> in our final product to achieve success. They come from multiple stakeholders — not just the designer.</p>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Designer</h3>
+                        <p>Site must have correct utility and be usable.</p>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Site Owner (Customer)</h3>
+                        <p>Site must allow the sale of products.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>End User</h3>
+                        <p>Site must allow me to select products by browsing by color, style, product name, or size.</p>
+                    </div>
+                </div>
+                <div class="highlight-box yellow" style="margin-top:14px;">
+                    <h3>⚠️ Key Point</h3>
+                    <p><strong>Designers do not determine specific requirements.</strong> They <em>gather</em> requirements specified by clients and end users. The designer facilitates the process.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 30 — Requirements Elicitation
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Requirements Elicitation</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Key Terms</h3>
+                        <ul class="bullet-points">
+                            <li><strong>Requirements Analysis</strong> — learning and understanding user needs</li>
+                            <li><strong>Requirements Elicitation</strong> — discovering requirements by communicating with users</li>
+                            <li><strong>User Task Analysis</strong> — determining how requirements should be implemented</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>Elicitation Techniques</h3>
+                        <ul class="bullet-points">
+                            <li><strong>Interviews &amp; questionnaires</strong> — specific, detailed questions</li>
+                            <li><strong>Brainstorming sessions</strong> — group discussion of ideas</li>
+                            <li><strong>Storyboards</strong> — diagram alternatives, discuss pros/cons</li>
+                            <li><strong>Role playing</strong> — walk through a specific requirement</li>
+                            <li><strong>Prototyping</strong> — rough drafts for examination</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="highlight-box yellow" style="margin-top:14px;">
+                    <h3>💡 Important Note</h3>
+                    <p>Users generally will not have thought through their requirements in advance. They must be guided in the process of stating them. A client saying "I want an online store" leaves many design decisions open.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SLIDE 31 — Types of Requirements
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Types of Requirements</div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Specific Requirements</h3>
+                        <p>Tied to functional demands or design attributes:</p>
+                        <ul class="bullet-points">
+                            <li>"Our company color is royal blue; we'd like that featured in the design"</li>
+                            <li>"We'd like site visitors to be able to chat with technical support"</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h3>General Requirements</h3>
+                        <p>Derived from knowledge of targeted users:</p>
+                        <ul class="bullet-points">
+                            <li>Older audience → avoid flashy presentation</li>
+                            <li>High color contrast for readability</li>
+                            <li>Larger text for accessibility</li>
+                            <li>Mobile-first if users are on phones</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top:16px;">
+                    <h3>Requirements vs. Mission Statement</h3>
+                    <p>Sometimes stated requirements conflict with the site's mission statement. The client/site owner must be made aware of conflicts so they can decide how they'll be handled. The designer facilitates, but doesn't decide.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 SECTION DIVIDER — Quiz
+            ══════════════════════════════════════════════ -->
+            <div class="slide" style="background: linear-gradient(135deg, #78350f, #f59e0b);">
+                <div class="section-label">Review</div>
+                <h2>Lecture Quiz</h2>
+                <p>10 questions — click "Reveal Answer" to check</p>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 QUIZ Q1–Q5
+            ══════════════════════════════════════════════ -->
+            <div class="slide">
+                <div class="slide-title">Lecture Quiz — Questions 1–5</div>
+                <div class="quiz-card">
+                    <div class="question"><span class="quiz-num">1</span> Which element do we use to create a link?</div>
+                    <div class="quiz-option" id="q1a"><span class="opt-letter">A</span> <code>&lt;href&gt;</code></div>
+                    <div class="quiz-option" id="q1b"><span class="opt-letter">B</span> <code>&lt;a&gt;</code></div>
+                    <div class="quiz-option" id="q1c"><span class="opt-letter">C</span> <code>&lt;img&gt;</code></div>
+                    <div class="quiz-option" id="q1d"><span class="opt-letter">D</span> <code>&lt;link&gt;</code></div>
+                    <button class="reveal-btn" onclick="revealAnswer('q1','b','The anchor tag &lt;a&gt; creates hyperlinks. href is an attribute, not a tag.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q1-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:14px;">
+                    <div class="question"><span class="quiz-num">2</span> How are links displayed by default?</div>
+                    <div class="quiz-option" id="q2a"><span class="opt-letter">A</span> <span style="color:black; text-decoration:none;">Like this (black, no underline)</span></div>
+                    <div class="quiz-option" id="q2b"><span class="opt-letter">B</span> <span style="color:blue; text-decoration:underline;">Like this (blue, underlined)</span></div>
+                    <div class="quiz-option" id="q2c"><span class="opt-letter">C</span> <span style="color:red; text-decoration:none;">Like this (red, no underline)</span></div>
+                    <div class="quiz-option" id="q2d"><span class="opt-letter">D</span> <span style="color:green; font-style:italic;">Like this (green, italic)</span></div>
+                    <button class="reveal-btn" onclick="revealAnswer('q2','b','By default, browsers display links in blue with an underline. CSS can override this.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q2-reveal"></div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="slide-title">Lecture Quiz — Questions 3–5</div>
+                <div class="quiz-card">
+                    <div class="question"><span class="quiz-num">3</span> Which two attributes are required for an <code>&lt;img&gt;</code> element?</div>
+                    <div class="quiz-option" id="q3a"><span class="opt-letter">A</span> <code>src</code> &amp; <code>alt</code></div>
+                    <div class="quiz-option" id="q3b"><span class="opt-letter">B</span> <code>src</code> &amp; <code>title</code></div>
+                    <div class="quiz-option" id="q3c"><span class="opt-letter">C</span> <code>title</code> &amp; <code>figcaption</code></div>
+                    <div class="quiz-option" id="q3d"><span class="opt-letter">D</span> <code>alt</code> &amp; <code>title</code></div>
+                    <button class="reveal-btn" onclick="revealAnswer('q3','a','src provides the image source (where to find it) and alt provides accessibility text. Both are required for valid HTML.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q3-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:14px;">
+                    <div class="question"><span class="quiz-num">4</span> Images can be used in place of text for hyperlinks.</div>
+                    <div class="quiz-option" id="q4a"><span class="opt-letter">A</span> True</div>
+                    <div class="quiz-option" id="q4b"><span class="opt-letter">B</span> False</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q4','a','True! Nest an &lt;img&gt; inside an &lt;a&gt; tag and the image becomes the clickable link.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q4-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:14px;">
+                    <div class="question"><span class="quiz-num">5</span> Which image format is most likely for a logo with a transparent background?</div>
+                    <div class="quiz-option" id="q5a"><span class="opt-letter">A</span> .bmp</div>
+                    <div class="quiz-option" id="q5b"><span class="opt-letter">B</span> .jpg</div>
+                    <div class="quiz-option" id="q5c"><span class="opt-letter">C</span> .svg</div>
+                    <div class="quiz-option" id="q5d"><span class="opt-letter">D</span> .gif or .png (supports transparency)</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q5','d','GIF and PNG both support transparency. JPEG does not. For logos and icons, GIF or PNG are the right choice.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q5-reveal"></div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="slide-title">Lecture Quiz — Questions 6–10</div>
+
+                <div class="quiz-card">
+                    <div class="question"><span class="quiz-num">6</span> Designers determine specific requirements.</div>
+                    <div class="quiz-option" id="q6a"><span class="opt-letter">A</span> True</div>
+                    <div class="quiz-option" id="q6b"><span class="opt-letter">B</span> False</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q6','b','False! Designers gather requirements from clients and end users — they do not determine them on their own.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q6-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:12px;">
+                    <div class="question"><span class="quiz-num">7</span> A site mission statement is usually identical to an organization's mission statement.</div>
+                    <div class="quiz-option" id="q7a"><span class="opt-letter">A</span> True</div>
+                    <div class="quiz-option" id="q7b"><span class="opt-letter">B</span> False</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q7','b','False! A site mission statement is specific to the web site and its goals — it may align with but is rarely identical to the org\'s overall mission statement.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q7-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:12px;">
+                    <div class="question"><span class="quiz-num">8</span> What technique can we use to understand our site's users?</div>
+                    <div class="quiz-option" id="q8a"><span class="opt-letter">A</span> Persona</div>
+                    <div class="quiz-option" id="q8b"><span class="opt-letter">B</span> Surveys / research</div>
+                    <div class="quiz-option" id="q8c"><span class="opt-letter">C</span> Client's marketing / sales department</div>
+                    <div class="quiz-option" id="q8d"><span class="opt-letter">D</span> All of the above</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q8','d','All of the above! Personas, surveys, and client information are all valid and commonly used techniques.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q8-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:12px;">
+                    <div class="question"><span class="quiz-num">9</span> Which of the following is a user characteristic we would identify when building personas?</div>
+                    <div class="quiz-option" id="q9i"><span class="opt-letter">I</span> All of the above (age, gender, education, occupation, hobbies, experience, goals, devices)</div>
+                    <div class="quiz-option" id="q9a"><span class="opt-letter">A</span> Just age ranges</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q9','i','All of the above! Personas incorporate all these dimensions to build a complete picture of the target user.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q9-reveal"></div>
+                </div>
+
+                <div class="quiz-card" style="margin-top:12px;">
+                    <div class="question"><span class="quiz-num">10</span> What does <code>target="_blank"</code> do?</div>
+                    <div class="quiz-option" id="q10a"><span class="opt-letter">A</span> Makes a page launch in a new tab</div>
+                    <div class="quiz-option" id="q10b"><span class="opt-letter">B</span> Overwrites the current page</div>
+                    <div class="quiz-option" id="q10c"><span class="opt-letter">C</span> Nothing — it's deprecated</div>
+                    <button class="reveal-btn" onclick="revealAnswer('q10','a','target=&quot;_blank&quot; opens the link in a new browser tab, keeping your current page open.')">Reveal Answer</button>
+                    <div class="quiz-reveal" id="q10-reveal"></div>
+                </div>
+            </div>
+
+        </div><!-- end .slide-content -->
+
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" onclick="previousSlide()">← Previous</button>
+            <div class="timer-display" id="timer" style="display: none;">00:00</div>
+            <button class="nav-button" id="next-btn" onclick="nextSlide()">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        // ── Slide navigation ──────────────────────────────
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let startTime = Date.now();
+
+        document.getElementById('total-slides').textContent = totalSlides;
+        updateSlideDisplay();
+        startTimer();
+
+        function updateSlideDisplay() {
+            slides.forEach(s => s.classList.remove('active'));
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('prev-btn').disabled = currentSlide === 0;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) { currentSlide++; updateSlideDisplay(); }
+        }
+        function previousSlide() {
+            if (currentSlide > 0) { currentSlide--; updateSlideDisplay(); }
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(elapsed / 60), s = elapsed % 60;
+                document.getElementById('timer').textContent =
+                    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        // ── Quiz logic ────────────────────────────────────
+        function revealAnswer(qId, correctLetter, explanation) {
+            const reveal = document.getElementById(`${qId}-reveal`);
+            // Mark correct option
+            const correctEl = document.getElementById(`${qId}${correctLetter}`);
+            if (correctEl) correctEl.classList.add('correct');
+            // Show explanation
+            reveal.innerHTML = `✅ <strong>Answer: ${correctLetter.toUpperCase()}</strong> — ${explanation}`;
+            reveal.style.display = 'block';
+        }
+
+        // ── Keyboard & touch navigation ───────────────────
+        document.addEventListener('keydown', e => {
+            if (['ArrowRight',' ','PageDown'].includes(e.key)) { e.preventDefault(); nextSlide(); }
+            else if (['ArrowLeft','PageUp'].includes(e.key))   { e.preventDefault(); previousSlide(); }
+            else if (e.key === 'Home') { e.preventDefault(); currentSlide=0; updateSlideDisplay(); }
+            else if (e.key === 'End')  { e.preventDefault(); currentSlide=totalSlides-1; updateSlideDisplay(); }
+        });
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (diff > 50) nextSlide();
+            else if (diff < -50) previousSlide();
+        });
+
+        // ── PDF generation (from template) ───────────────
+        async function generatePDF() {
+            await document.fonts.ready;
+            const loadingOverlay = document.getElementById('pdfLoading');
+            const progressText   = document.getElementById('progressText');
+            const slideCounter   = document.getElementById('slideCounter');
+            const slideProgressFill = document.getElementById('slideProgressFill');
+            const downloadBtn    = document.getElementById('downloadPDF');
+            loadingOverlay.classList.add('active');
+            downloadBtn.disabled = true;
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation:'landscape', unit:'in', format:'letter' });
+                const pw = pdf.internal.pageSize.getWidth();
+                const ph = pdf.internal.pageSize.getHeight();
+                const margin = 0.5;
+                const cw = pw - 2*margin, ch = ph - 2*margin;
+                const slideElements = document.querySelectorAll('.slide');
+                const originalSlideContent = document.querySelector('.slide-content');
+                const origStyles = {
+                    sc: originalSlideContent.style.cssText,
+                    slides: Array.from(slideElements).map(s => s.style.cssText)
+                };
+                originalSlideContent.style.cssText += 'overflow:visible!important;height:auto!important;padding:0!important;';
+                document.body.classList.add('pdf-mode');
+                slideElements.forEach(s => {
+                    s.style.cssText += 'display:block!important;opacity:1!important;visibility:visible!important;position:static!important;height:auto!important;min-height:800px!important;background:white!important;margin-bottom:20px!important;padding:40px!important;page-break-after:always;border:none!important;';
+                });
+                for (let i=0; i<slideElements.length; i++) {
+                    const slide = slideElements[i];
+                    progressText.textContent = `🖼️ Capturing slide ${i+1}...`;
+                    slideCounter.textContent = `Slide ${i+1} of ${slideElements.length}`;
+                    slideProgressFill.style.width = `${((i+1)/slideElements.length)*100}%`;
+                    slideElements.forEach((s,idx) => { if(idx!==i) s.style.display='none'; });
+                    slide.offsetHeight;
+                    await new Promise(r => setTimeout(r,100));
+                    try {
+                        const canvas = await html2canvas(slide, {
+                            allowTaint:true, useCORS:true, scale:2,
+                            width:slide.scrollWidth, height:slide.scrollHeight,
+                            backgroundColor:'#ffffff', logging:false
+                        });
+                        const ratio = canvas.width/canvas.height;
+                        const pageRatio = cw/ch;
+                        let fw, fh;
+                        if (ratio > pageRatio) { fw=cw; fh=cw/ratio; }
+                        else { fh=ch; fw=ch*ratio; }
+                        const x=(pw-fw)/2, y=(ph-fh)/2;
+                        if (i>0) pdf.addPage();
+                        pdf.addImage(canvas.toDataURL('image/jpeg',0.85),'JPEG',x,y,fw,fh);
+                    } catch(e) {
+                        if (i>0) pdf.addPage();
+                        pdf.setFontSize(16); pdf.setTextColor(220,53,69);
+                        pdf.text(`Error capturing slide ${i+1}`,pw/2,ph/2,{align:'center'});
+                    }
+                }
+                document.body.classList.remove('pdf-mode');
+                slideElements.forEach(s => { s.style.display='block'; });
+                originalSlideContent.style.cssText = origStyles.sc;
+                slideElements.forEach((s,i) => { s.style.cssText = origStyles.slides[i]; });
+                progressText.textContent = '💾 Saving PDF...';
+                await new Promise(r => setTimeout(r,500));
+                pdf.save(`CSCI-1210_Links-Images_${new Date().toISOString().split('T')[0]}.pdf`);
+                progressText.textContent = '🎉 PDF Generated Successfully!';
+                slideCounter.textContent = `✅ All ${slideElements.length} slides exported`;
+                slideProgressFill.style.width = '100%';
+                await new Promise(r => setTimeout(r,2000));
+            } catch(e) {
+                progressText.textContent = '❌ PDF Generation Failed';
+                await new Promise(r => setTimeout(r,3000));
+            } finally {
+                loadingOverlay.classList.remove('active');
+                downloadBtn.disabled = false;
+                updateSlideDisplay();
+            }
+        }
+    </script>
+</body>
+</html>
