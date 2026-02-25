@@ -1,0 +1,13 @@
+title: CSCI 1250 - Prof Haas' Public Class Resources
+
+plugins:
+  - jekyll-remote-theme
+
+remote_theme: broccolini/swiss
+theme_color: blue
+
+defaults:
+  - scope:
+      path: "**/*.md"
+    values:
+      layout: "custom_post"
