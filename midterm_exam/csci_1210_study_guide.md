@@ -1,7 +1,6 @@
 # CSCI 1210 — Midterm Study Guide
 
 Use this guide to review the key concepts covered on the midterm. My recommendation: don't attempt to memorize the HTML and CSS by just looking at it. For example,, make some small HTML files and try to apply CSS rules to do things like set alt text on an image, make it float left, center it, etc.
----
 
 ## 1. HTML Fundamentals
 
