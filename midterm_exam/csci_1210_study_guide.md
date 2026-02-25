@@ -155,6 +155,7 @@ h1 {
 | **Rule** | The whole block | Selector + all its declarations |
 
 ### Three Ways to Apply CSS
+
 | Method | Syntax | Where it lives |
 |---|---|---|
 | **Inline** | `<p style="color:red;">` | Inside an HTML element's tag |
