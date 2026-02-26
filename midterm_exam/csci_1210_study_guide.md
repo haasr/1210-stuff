@@ -126,6 +126,7 @@ Always include `alt` on `<img>` elements. Omitting it isn't a syntax crash, but 
 > A URL that starts with `http://` or `https://` is always absolute. A URL that starts with a folder name or `../` is always relative.
 
 ### Navigating Directories
+
 | Path | Meaning |
 |---|---|
 | `images/photo.jpg` | Go *into* the `images` subfolder |
