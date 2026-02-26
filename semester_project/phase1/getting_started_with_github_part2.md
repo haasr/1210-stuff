@@ -2,6 +2,8 @@
 
 GitHub Pages is a free hosting service built into GitHub that serves static websites directly from a repository. Once configured, any HTML, CSS, and JavaScript you push to your repository will be accessible through a public URL — no server setup required. This is a great way to see a working draft of your website as you build it.
 
+[Video guide!](https://youtu.be/TOXwSslVHZA)
+
 ## 1. Understand Your GitHub Pages URL
 
 Your site's URL is determined by your GitHub username and repository name:
