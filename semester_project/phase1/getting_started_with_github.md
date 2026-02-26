@@ -1,4 +1,4 @@
-# Getting Started with GitHub
+# Getting Started with GitHub, Part 1: Essential Setup
 
 ## 1. Create Account and Install GitHub Desktop
 
