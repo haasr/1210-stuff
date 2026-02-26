@@ -246,8 +246,6 @@ CSS colors can be written several ways. Know which values produce which colors.
 | Black | `#000000` | `rgb(0, 0, 0)` |
 | White | `#FFFFFF` | `rgb(255, 255, 255)` |
 
-> **Watch out:** `#0000FF` is *blue*, not red. `#FF0000` is red.
-
 ---
 
 ## 6. Images on the Web
