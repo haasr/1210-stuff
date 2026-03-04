@@ -1,4 +1,4 @@
-# CSCI 1210 — Web Development Study Guide
+# CSCI 1210 — Essentials of Web Development Study Guide
 ### Midterm Review
 
 ---
