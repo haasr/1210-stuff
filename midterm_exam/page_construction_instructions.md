@@ -1,6 +1,6 @@
 # Midterm Page Construction Instructions
 
-## 0. Target Webpage
+## Your Task: Recreate the Webpage!
 
 Recreate the following page:
 
