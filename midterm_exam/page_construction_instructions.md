@@ -67,4 +67,4 @@ A `<main>` containing one `<section>` with all of the following in order:
 2. Display your page in a browser
 3. Validate your file; fix any errors; and re-upload the fixed file&nbsp;
 4. Upload a text file with the URL for your file to the Midterm Dropbox folder on D2L
-5. In NPP, press `Ctrl-a` to select all of the text; then `Ctrl+c` to copy it; return here and paste the text into your response here in D2L (replacing the starting code with your completed code)
+5. In VS Code, press `Ctrl-a` to select all of the text; then `Ctrl+c` to copy it; return here and paste the text into your response here in D2L (replacing the starting code with your completed code)
