@@ -1,5 +1,11 @@
 # Midterm Page Construction Instructions
 
+## 0. Target Webpage
+
+Recreate the following page:
+
+<img src="img/midterm-finished-page-preview.png" alt="A preview of the finished National Park Explorer page" width="100%">
+
 ## 1. File setup
 
 1. Set the page title to one suitable for this ficitious national parks information website
