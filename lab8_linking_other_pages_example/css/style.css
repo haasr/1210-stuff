@@ -1,0 +1,104 @@
+body {
+    font-family: 'Raleway', sans-serif;
+    margin: 0;
+    width: 100%;
+}
+
+#container {
+    max-width: 1200px;
+    min-height: 500px;
+    margin: 0 auto;
+    padding: 0 10px;
+    margin-bottom: 75px;
+    margin: 0 auto;
+}
+
+.img-left {
+    display: block;
+    width: 100px;
+    float: left;
+    margin-right: 20px;
+}
+
+.img-right {
+    display: block;
+    width: 100px;
+    float: right;
+    margin-left: 20px;
+}
+
+header,
+nav,
+footer {
+    background-color: rgba(50, 50, 50, .8);
+    color: #eee;
+    width: 100%;
+    margin: 0;
+    padding: 10px 0px;
+}
+
+header {
+    height: 95px;
+    text-align: center;
+}
+
+article#left-pane {
+    padding: 10px;
+    float: left;
+    width: 45%;
+}
+
+article#right-pane {
+    padding: 10px;
+    float: right;
+    width: 45%;
+}
+
+nav {
+    padding-bottom: 50px;
+}
+
+nav a {
+    float: left;
+    display: block;
+    width: 75px;
+    color: #FFF;
+    padding: 5px 0;
+}
+
+nav a:link,
+nav a:visited {
+    margin-right: 15px;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    position: relative;
+    left: 50px;
+    top: -25px;
+    /*
+    The transition property says these three specified properties
+    (background-color, color, and scale will not immediately
+    change on hover. They will change gradually over a 0.3-second
+    duration. You can play with this to change the way links and
+    buttons "feel". 
+    */
+    transition: background-color color scale 0.3s ease;
+}
+
+nav a:hover {
+    /*
+    Default scale is 1.0. You can make things grow or shrink
+    by manipulating the scale in a pseudo class.
+    */
+    scale: 1.2;
+    color: #FFDCAD;
+    background-color: #7e7e7e;
+    border-bottom: 4px solid #333;
+}
+
+nav a:active,
+.current {
+    color: #FFDCAD;
+    background-color: #7e7e7e;
+    border-bottom: 4px solid #333;
+}
