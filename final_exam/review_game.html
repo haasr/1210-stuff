@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Essentials Review Game</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #001C50;
+      --surface: #002570;
+      --accent:  #FFC72C;
+      --text:    #F0F4FF;
+      --muted:   #8BA3D4;
+      --correct: #2ECC71;
+      --wrong:   #E74C3C;
+      --radius:  10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: .25rem;
+      letter-spacing: .5px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: .4rem;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width .35s ease;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 2rem 2.25rem;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .section-label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      margin-bottom: .6rem;
+    }
+
+    .question-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .question-text code {
+      background: rgba(255,255,255,.08);
+      border-radius: 4px;
+      padding: .1em .4em;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: .92em;
+    }
+
+    .multi-hint {
+      font-size: .78rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    /* ── Options ── */
+    .options { display: flex; flex-direction: column; gap: .65rem; }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: .8rem 1rem;
+      border-radius: var(--radius);
+      border: 2px solid rgba(255,255,255,.1);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+    }
+
+    .option:hover:not(.locked) { border-color: var(--accent); }
+    .option.selected           { border-color: var(--accent); background: rgba(255,199,44,.08); }
+    .option.correct            { border-color: var(--correct); background: rgba(46,204,113,.12); }
+    .option.wrong              { border-color: var(--wrong);   background: rgba(231,76,60,.12);  }
+    .option.reveal             { border-color: var(--correct); background: rgba(46,204,113,.08); }
+    .option.locked             { cursor: default; }
+
+    .opt-letter {
+      width: 26px;
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: background .15s, color .15s;
+    }
+
+    .option.selected .opt-letter  { background: var(--accent); color: var(--bg); }
+    .option.correct  .opt-letter  { background: var(--correct); color: #fff; }
+    .option.wrong    .opt-letter  { background: var(--wrong);   color: #fff; }
+    .option.reveal   .opt-letter  { background: var(--correct); color: #fff; }
+
+    .opt-text { font-size: .95rem; line-height: 1.5; }
+    .opt-text code {
+      background: rgba(255,255,255,.08);
+      border-radius: 4px;
+      padding: .1em .4em;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: .9em;
+    }
+
+    /* ── Feedback banner ── */
+    .feedback {
+      margin-top: 1.25rem;
+      padding: .75rem 1rem;
+      border-radius: var(--radius);
+      font-size: .9rem;
+      font-weight: 600;
+      display: none;
+    }
+    .feedback.show-correct { display: block; background: rgba(46,204,113,.15); color: var(--correct); border: 1px solid var(--correct); }
+    .feedback.show-wrong   { display: block; background: rgba(231,76,60,.15);  color: var(--wrong);   border: 1px solid var(--wrong);   }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: .75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: .65rem 1.4rem;
+      border-radius: var(--radius);
+      border: none;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .4; cursor: default; }
+
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-ghost   { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+
+    /* ── Results screen ── */
+    #results { display: none; width: 100%; max-width: 680px; }
+
+    .score-badge {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .score-circle {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 5px solid var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .score-number { font-size: 2.4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    .score-denom  { font-size: .9rem;  color: var(--muted); margin-top: .2rem; }
+    .score-pct    { font-size: 1.15rem; color: var(--text); font-weight: 600; }
+
+    .results-message {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: .95rem;
+    }
+
+    .review-section { margin-bottom: 1.75rem; }
+
+    .review-section h3 {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: .75rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid rgba(255,199,44,.2);
+    }
+
+    .topic-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .55rem;
+    }
+
+    .topic-name { font-size: .9rem; flex: 1; }
+
+    .topic-bar-wrap {
+      flex: 2;
+      height: 8px;
+      background: rgba(255,255,255,.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .topic-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .6s ease;
+    }
+
+    .topic-pct { font-size: .8rem; color: var(--muted); min-width: 36px; text-align: right; }
+
+    .flag-list { list-style: none; }
+    .flag-list li {
+      padding: .5rem .75rem;
+      border-radius: 6px;
+      background: rgba(231,76,60,.1);
+      border-left: 3px solid var(--wrong);
+      font-size: .88rem;
+      margin-bottom: .4rem;
+      color: var(--text);
+    }
+    .flag-list li.ok {
+      background: rgba(46,204,113,.07);
+      border-left-color: var(--correct);
+    }
+
+    /* ── Start screen ── */
+    #start-screen {
+      text-align: center;
+      max-width: 500px;
+    }
+
+    #start-screen p {
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      font-size: .95rem;
+    }
+
+    /* hidden utility */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- START -->
+  <h1>Web Essentials Review Game</h1>
+  <p class="subtitle">Final Exam Prep — CSCI 1210</p>
+
+  <div id="start-screen">
+    <p>
+      You'll get <strong id="q-count-label" style="color:var(--accent)">27</strong> questions
+      sampled evenly from every topic area.
+      Each run is different — so try again if you want fresh questions!
+      At the end you'll see a breakdown by topic so you know exactly what to study.
+    </p>
+    <button class="btn-primary" onclick="startGame()">Start Review</button>
+
+    <p style="font-style: italic;">
+      Disclaimer: This review game was generated by Claude, based closely on CSCI-1210 materials.
+      Although I have done a cursory review of all questions, if you notice a discrepancy,
+      let me know and refer back to our course materials (lecture slides and past quizzes).
+      -RH
+    </p>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="hidden" style="width:100%;display:flex;flex-direction:column;align-items:center;">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="q-label">Question 1 of 27</span>
+        <span id="score-running">Score: 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label" id="section-label"></div>
+      <div class="question-text" id="question-text"></div>
+      <div class="multi-hint hidden" id="multi-hint">Select all that apply, then click Submit.</div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="btn-row">
+        <button class="btn-primary hidden" id="btn-submit" onclick="submitAnswer()">Submit</button>
+        <button class="btn-primary hidden" id="btn-next" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="score-badge">
+      <div class="score-circle">
+        <div class="score-number" id="res-score">0</div>
+        <div class="score-denom" id="res-denom">/ 0</div>
+      </div>
+      <div class="score-pct" id="res-pct"></div>
+    </div>
+    <p class="results-message" id="res-message"></p>
+
+    <div class="card review-section">
+      <h3>Performance by Topic</h3>
+      <div id="topic-bars"></div>
+    </div>
+
+    <div class="card review-section" id="study-card">
+      <h3>Topics to Review</h3>
+      <ul class="flag-list" id="study-list"></ul>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button class="btn-primary" onclick="location.reload()">Play Again</button>
+    </div>
+  </div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTION BANK
+// ─────────────────────────────────────────────
+const SECTIONS = [
+  "Networking & the Web",
+  "HTML Structure & Elements",
+  "Tables",
+  "CSS Fundamentals",
+  "Images & Media",
+  "Web Design Principles",
+  "Accessibility",
+  "Miscellaneous / History"
+];
+
+// Each question: { id, section (0-indexed), text, options[], correct[] (0-indexed letters), multi }
+// Graphic-dependent questions that can't stand alone (Q47, Q51) are omitted.
+// Q21, Q39, Q40 are adapted to text-only.
+
+const ALL_QUESTIONS = [
+
+  // ── Section 0: Networking & the Web ──────────────────────────────────
+  { id:1, s:0, text:"What does DNS stand for, and what is its primary function?",
+    opts:["Dynamic Node System — assigns IP addresses to devices on a network",
+          "Domain Name System — translates human-readable domain names to IP addresses",
+          "Distributed Network Service — routes packets across the internet",
+          "Domain Navigation Standard — maps URLs to physical file paths on a server"],
+    ans:[1] },
+
+  { id:2, s:0, text:"In the following URL, which part is the <strong>domain</strong>?<br><br><code>https://www.example.edu/courses/web101/index.html</code>",
+    opts:["<code>https://</code>","<code>www</code>","<code>example.edu</code>","<code>/courses/web101/index.html</code>"],
+    ans:[2] },
+
+  { id:3, s:0, text:"Which of the following is the <strong>TLD</strong> in this URL?<br><br><code>http://www.csci1710.net/labs/lab2/index.html</code>",
+    opts:["<code>http://</code>","<code>.net</code>","<code>lab2</code>","<code>.html</code>"],
+    ans:[1] },
+
+  { id:4, s:0, text:"What is a <strong>protocol</strong> in the context of computer networking?",
+    opts:["A type of web server software",
+          "An established rule that governs communication between systems",
+          "A human-readable address for a website",
+          "The file path portion of a URL"],
+    ans:[1] },
+
+  { id:5, s:0, text:"If a user navigates to <code>http://www.mysite.com</code> with no filename specified, what will the browser typically look for first?",
+    opts:["<code>home.html</code>","<code>default.html</code>","<code>index.html</code>","The browser will return an error with no filename present"],
+    ans:[2] },
+
+  // ── Section 1: HTML Structure & Elements ─────────────────────────────
+  { id:6, s:1, text:"Which of the following statements accurately describe HTML? <em>(Select all that apply)</em>",
+    opts:["It is a compiled language","It uses markup to describe structure","It is plain text",
+          "It must be processed by a server before the browser can read it","It describes the structure of a web page"],
+    ans:[1,2,4], multi:true },
+
+  { id:7, s:1, text:"Where is the correct place in an HTML document to link an external stylesheet?",
+    opts:["In the <code>&lt;body&gt;</code> section",
+          "At the very end of the document, after <code>&lt;/body&gt;</code>",
+          "In the <code>&lt;head&gt;</code> section",
+          "In the doctype declaration"],
+    ans:[2] },
+
+  { id:8, s:1, text:"Which tag is used to link an external CSS file to an HTML document?",
+    opts:["<code>&lt;style&gt;</code>","<code>&lt;a&gt;</code>","<code>&lt;href&gt;</code>","<code>&lt;link&gt;</code>"],
+    ans:[3] },
+
+  { id:9, s:1, text:"What is the correct HTML5 doctype declaration?",
+    opts:["<code>&lt;!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 5.0//EN\"&gt;</code>",
+          "<code>&lt;!DOCTYPE HTML5&gt;</code>",
+          "<code>&lt;!DOCTYPE html&gt;</code>",
+          "<code>&lt;DOCTYPE html&gt;</code>"],
+    ans:[2] },
+
+  { id:10, s:1, text:"How would you classify the <code>&lt;em&gt;</code> element?",
+    opts:["Block container","Inline container","Block standalone","Inline standalone"],
+    ans:[1] },
+
+  { id:11, s:1, text:"Which HTML element is used to display a <strong>horizontal rule</strong> (a thematic break line) on the page?",
+    opts:["<code>&lt;br&gt;</code>","<code>&lt;hr&gt;</code>","<code>&lt;line&gt;</code>","<code>&lt;rule&gt;</code>"],
+    ans:[1] },
+
+  { id:12, s:1, text:"Which element do you nest inside a <code>&lt;figure&gt;</code> to add a caption?",
+    opts:["<code>&lt;cap&gt;</code>","<code>&lt;caption&gt;</code>","<code>&lt;figcap&gt;</code>","<code>&lt;figcaption&gt;</code>"],
+    ans:[3] },
+
+  { id:13, s:1, text:"An <code>&lt;article&gt;</code> element <strong>must</strong> always be nested inside a <code>&lt;section&gt;</code> element.",
+    opts:["True","False"], ans:[1] },
+
+  { id:14, s:1, text:"<code>div</code> elements are: <em>(select the best answer)</em>",
+    opts:["Inline elements used to style small runs of text",
+          "Block-level container elements used to group related content",
+          "Semantic elements introduced in HTML5",
+          "Only valid inside a <code>&lt;form&gt;</code> element"],
+    ans:[1] },
+
+  { id:15, s:1, text:"In HTML5, which attribute makes an input field <strong>required</strong> before a form can be submitted?",
+    opts:["<code>validate</code>","<code>placeholder</code>","<code>required</code>","<code>formvalidate</code>"],
+    ans:[2] },
+
+  { id:16, s:1, text:"What is the correct HTML to create a <strong>text input</strong> field in a form?",
+    opts:["<code>&lt;textfield&gt;</code>",
+          "<code>&lt;input type=\"textfield\"&gt;</code>",
+          "<code>&lt;input type=\"text\"&gt;</code>",
+          "<code>&lt;textinput type=\"text\"&gt;</code>"],
+    ans:[2] },
+
+  { id:17, s:1, text:"Which HTML element creates a <strong>numbered (ordered) list</strong>?",
+    opts:["<code>&lt;ul&gt;</code>","<code>&lt;dl&gt;</code>","<code>&lt;ol&gt;</code>","<code>&lt;list&gt;</code>"],
+    ans:[2] },
+
+  // ── Section 2: Tables ─────────────────────────────────────────────────
+  { id:18, s:2, text:"Which attribute do you add to a <code>&lt;td&gt;</code> tag to make a cell <strong>span multiple columns</strong>?",
+    opts:["<code>cellspan=\"n\"</code>","<code>rowspan=\"n\"</code>","<code>colspan=\"n\"</code>","<code>cellspanh=\"n\"</code>"],
+    ans:[2] },
+
+  { id:19, s:2, text:"What are the basic table elements in HTML? <em>(Select all that apply)</em>",
+    opts:["<code>&lt;tc&gt;</code>","<code>&lt;table&gt;</code>","<code>&lt;row&gt;</code>",
+          "<code>&lt;tr&gt;</code>","<code>&lt;td&gt;</code>","<code>&lt;column&gt;</code>","<code>&lt;cell&gt;</code>"],
+    ans:[1,3,4], multi:true },
+
+  { id:20, s:2, text:"Browsers render HTML tables in what fashion?",
+    opts:["Column by column","Row by row","Spanned cells first, then everything else","Bottom to top"],
+    ans:[1] },
+
+  { id:21, s:2, text:"To make a table cell span <strong>3 rows</strong> vertically, which code would you use?",
+    opts:["<code>&lt;td colspan=\"3\"&gt;A&lt;/td&gt;</code>",
+          "<code>&lt;td rowspan=\"3\"&gt;A&lt;/td&gt;</code>",
+          "<code>&lt;td hspan=\"3\"&gt;A&lt;/td&gt;</code>",
+          "<code>&lt;td rowspan=\"2\"&gt;A&lt;/td&gt;</code>"],
+    ans:[1] },
+
+  // ── Section 3: CSS Fundamentals ───────────────────────────────────────
+  { id:22, s:3, text:"Which of the following are basic components of a CSS rule? <em>(Select all that apply)</em>",
+    opts:["selector","property","value","charset","<code>&lt;script&gt;</code>","link"],
+    ans:[0,1,2], multi:true },
+
+  { id:23, s:3, text:"How do you define a CSS <strong>class</strong> named <code>highlight</code>?",
+    opts:["<code>#highlight { ... }</code>","<code>*highlight { ... }</code>","<code>.highlight { ... }</code>","<code>highlight { ... }</code>"],
+    ans:[2] },
+
+  { id:24, s:3, text:"Which of the following is <strong>not</strong> a valid class or ID name in CSS?",
+    opts:["<code>_content</code>","<code>contentTwo</code>","<code>$content</code>","<code>content2</code>"],
+    ans:[2] },
+
+  { id:25, s:3, text:"Which CSS property controls <strong>text size</strong>?",
+    opts:["<code>text-size</code>","<code>font-style</code>","<code>text-style</code>","<code>font-size</code>"],
+    ans:[3] },
+
+  { id:26, s:3, text:"Which CSS property and value makes text <strong>bold</strong>?",
+    opts:["<code>text-style: bold;</code>","<code>font-weight: bold;</code>","<code>font: bold;</code>","<code>style: bold;</code>"],
+    ans:[1] },
+
+  { id:27, s:3, text:"What is the <strong>default value</strong> of the CSS <code>position</code> property?",
+    opts:["<code>relative</code>","<code>absolute</code>","<code>fixed</code>","<code>static</code>"],
+    ans:[3] },
+
+  { id:28, s:3, text:"The CSS <code>position: fixed</code> property will:",
+    opts:["Affix an element relative to its nearest positioned parent",
+          "Affix an element to a specific place in the viewport, even when the page is scrolled",
+          "Hide the element from view",
+          "<code>fixed</code> is not a valid value for <code>position</code>"],
+    ans:[1] },
+
+  { id:29, s:3, text:"Using <code>position</code> properties carelessly can cause one element to <strong>overlap</strong> another unintentionally.",
+    opts:["True","False"], ans:[0] },
+
+  { id:30, s:3, text:"Which CSS rule will correctly <strong>center a block-level element</strong> horizontally in its container?",
+    opts:["<code>margin: 0 auto;</code>","<code>text-align: center;</code>","<code>align: center;</code>","<code>display: center;</code>"],
+    ans:[0] },
+
+  { id:31, s:3, text:"What are valid CSS <strong>units of measure</strong>? <em>(Select all that apply)</em>",
+    opts:["<code>px</code>","<code>km</code>","<code>em</code>","<code>%</code>","<code>lb</code>","<code>dp</code>"],
+    ans:[0,2,3], multi:true },
+
+  { id:32, s:3, text:"How do you add a <strong>background color</strong> to all <code>&lt;h2&gt;</code> elements?",
+    opts:["<code>h2.all { background-color: #FFFFFF; }</code>",
+          "<code>all.h2 { background-color: #FFFFFF; }</code>",
+          "<code>h2 { background-color: #FFFFFF; }</code>",
+          "<code>&lt;h2 style=\"background-color:#FFFFFF;\"&gt;</code>"],
+    ans:[2] },
+
+  { id:33, s:3, text:"It is possible to apply the same CSS rules to <strong>multiple selectors</strong> in a single declaration (e.g., <code>h1, h2 { color: blue; }</code>).",
+    opts:["True","False"], ans:[0] },
+
+  { id:34, s:3, text:"How do you select <strong>all <code>&lt;p&gt;</code> elements inside a <code>&lt;div&gt;</code></strong> using CSS?",
+    opts:["<code>div, p</code>","<code>div.p</code>","<code>div + p</code>","<code>div p</code>"],
+    ans:[3] },
+
+  { id:35, s:3, text:"Which CSS selector responds to <strong>user interaction</strong> (such as hovering over an element)?",
+    opts:["Classes","IDs","Pseudo-classes","Contextual selectors"],
+    ans:[2] },
+
+  { id:36, s:3, text:"Which of the following correctly defines <strong>pseudo-class</strong> syntax for links?",
+    opts:["<code>a[p]link, a[p]visited { color: red; }</code>",
+          "<code>a:link, a:visited { color: red; }</code>",
+          "<code>a>link, a>visited { color: red; }</code>",
+          "<code>a link, a visited { color: red; }</code>"],
+    ans:[1] },
+
+  { id:37, s:3, text:"Which pseudo-class would you use to style a link that has already been <strong>visited</strong>?",
+    opts:["<code>a:link</code>","<code>#visited</code>","<code>a:visited</code>","<code>.visited</code>"],
+    ans:[2] },
+
+  { id:38, s:3, text:"A CSS <strong>ID</strong> selector can be applied to multiple elements on the same page.",
+    opts:["True","False"], ans:[1] },
+
+  { id:39, s:3, text:"In a CSS rule such as <code>p { border: 1px solid black; }</code>, what is <code>border</code> called?",
+    opts:["selector","value","property","content"],
+    ans:[2] },
+
+  { id:40, s:3, text:"In the CSS Box Model, what does the <strong>outermost layer</strong> (surrounding the border) represent?",
+    opts:["Padding","Content","Border","Margin"],
+    ans:[3] },
+
+  { id:41, s:3, text:"What does the <code>float</code> CSS property cause a block-level element to do?",
+    opts:["Display on top of other elements",
+          "Center itself in its container",
+          "Display on the left or right of its container with content wrapping around it",
+          "Fix its position on the page during scrolling"],
+    ans:[2] },
+
+  { id:42, s:3, text:"If an image is floated right and you want the <strong>next paragraph to appear below</strong> the image (not wrapping around it), what would you apply to the paragraph?",
+    opts:["<code>float: left;</code>","<code>clear: right;</code>","<code>width: 100%;</code>","<code>display: block;</code>"],
+    ans:[1] },
+
+  { id:43, s:3, text:"How do you insert a <strong>comment</strong> in a CSS file?",
+    opts:["<code>' this is a comment</code>","<code>// this is a comment</code>",
+          "<code>/* this is a comment */</code>","<code>&lt;!-- this is a comment --&gt;</code>"],
+    ans:[2] },
+
+  { id:44, s:3, text:"Which HTML attribute is used to apply <strong>inline CSS styles</strong> to an element?",
+    opts:["<code>font</code>","<code>styles</code>","<code>class</code>","<code>style</code>"],
+    ans:[3] },
+
+  { id:45, s:3, text:"In CSS, linking to many external resources (e.g., multiple Google Fonts) can negatively impact <strong>page load time</strong>.",
+    opts:["True","False"], ans:[0] },
+
+  // ── Section 4: Images & Media ─────────────────────────────────────────
+  { id:46, s:4, text:"Why is it important to <strong>optimize images</strong> for the web?",
+    opts:["Larger files always take up more display space, making layout harder",
+          "Storage costs from ISPs make unoptimized images expensive",
+          "Since JPEGs use compression, optimization is never necessary",
+          "Larger file sizes increase download times and hurt user experience"],
+    ans:[3] },
+
+  { id:48, s:4, text:"Images can be used as <strong>hyperlinks</strong> in HTML.",
+    opts:["True","False"], ans:[0] },
+
+  { id:49, s:4, text:"Which of the following CSS properties/values would cause an image to display along the <strong>right side</strong> of its container with text wrapping around it?",
+    opts:["<code>float: left;</code>","<code>text-align: right;</code>","<code>align: left;</code>","<code>float: right;</code>"],
+    ans:[3] },
+
+  // ── Section 5: Web Design Principles ─────────────────────────────────
+  { id:50, s:5, text:"What do we call the psychological design theory that states <em>the whole is perceived as greater than the sum of its parts</em>?",
+    opts:["Functional Fixedness","Mosaic","Gestalt","Information Architecture"],
+    ans:[2] },
+
+  { id:52, s:5, text:"With regard to color selection, what is the <strong>most important</strong> consideration for web design?",
+    opts:["Hue","Saturation","Luminosity","Contrast"],
+    ans:[3] },
+
+  { id:53, s:5, text:"Which of the following represent <strong>best-practice design tips</strong>? <em>(Select all that apply)</em>",
+    opts:["Establish a visual hierarchy",
+          "Use as many fonts as possible to maintain interest",
+          "Keep important content \"above the fold\"",
+          "Guide the user's eye through the page",
+          "Listen to the customer / stakeholder"],
+    ans:[0,2,3,4], multi:true },
+
+  { id:54, s:5, text:"What are the two primary things users use to judge a website?",
+    opts:["Color and text","Load time and pictures","Content and usability","Context and ubiquity"],
+    ans:[2] },
+
+  { id:55, s:5, text:"A web site's <strong>usefulness</strong> is best judged by its:",
+    opts:["Utility and understandability","Usability and user-friendliness","Utility and usability","Understandability and uniformity"],
+    ans:[2] },
+
+  { id:56, s:5, text:"What is the term for the science of figuring out what a site should contain and how it should best be organized and presented?",
+    opts:["Page Layout","Navbar Design","Information Architecture","Filesystem Navigation"],
+    ans:[2] },
+
+  { id:57, s:5, text:"Every well-designed website has a set of targeted users and:",
+    opts:["A needlessly complex navigation structure","Included multimedia content","A well-defined mission","A low-contrast color scheme"],
+    ans:[2] },
+
+  { id:58, s:5, text:"Regardless of client preferences, all targeted user groups should be given <strong>equal priority</strong> in the overall design.",
+    opts:["True","False"], ans:[1] },
+
+  { id:59, s:5, text:"Who makes the <strong>best test subjects</strong> for usability testing of a website?",
+    opts:["Random members of the design team","College students","Anyone available","Subjects who closely match the target user profiles"],
+    ans:[3] },
+
+  { id:60, s:5, text:"Testing should only be conducted when a site is <strong>fully ready to launch</strong>, to avoid invalidating results.",
+    opts:["True","False"], ans:[1] },
+
+  // ── Section 6: Accessibility ──────────────────────────────────────────
+  { id:61, s:6, text:"Approximately what percentage of Americans have some form of disability?",
+    opts:["5%","33%","45%","20%"],
+    ans:[3] },
+
+  { id:62, s:6, text:"What are the <strong>primary concerns</strong> associated with web accessibility? <em>(Select all that apply)</em>",
+    opts:["Visual impairment","Motor impairment","Hearing impairment","Financial impairment"],
+    ans:[0,1,2], multi:true },
+
+  { id:63, s:6, text:"Which of the following is <strong>not</strong> part of the W3C Web Accessibility Initiative's recommendations?",
+    opts:["Image text alternatives (<code>alt</code> attribute)",
+          "Keyboard access and visual focus",
+          "Requiring all pages to have a video alternative",
+          "Contrast ratio (\"color contrast\")"],
+    ans:[2] },
+
+  // ── Section 7: Miscellaneous / History ───────────────────────────────
+  { id:64, s:7, text:"Who is credited with inventing the World Wide Web?",
+    opts:["Alan Turing","Al Gore","Linus Torvalds","Tim Berners-Lee"],
+    ans:[3] },
+
+  { id:65, s:7, text:"Why is <strong>indentation</strong> used in HTML and CSS code?",
+    opts:["It is required by the HTML/CSS syntax",
+          "HTML and CSS are whitespace-dependent languages",
+          "It serves no functional purpose",
+          "It makes code more readable and maintainable"],
+    ans:[3] },
+
+  { id:66, s:7, text:"Why is it good practice to include <strong>comments</strong> in your code? <em>(Select the best answer)</em>",
+    opts:["So you can remember what a piece of code does",
+          "So collaborators can understand your intent",
+          "To make code more readable and maintainable",
+          "All of the above"],
+    ans:[3] },
+
+  { id:67, s:7, text:"What does <strong>FTP</strong> stand for?",
+    opts:["File Transmission Practice","First Translation Protocol","Full Transfer Pack","File Transfer Protocol"],
+    ans:[3] },
+];
+
+// ─────────────────────────────────────────────
+//  SAMPLING — even distribution per section
+// ─────────────────────────────────────────────
+const TARGET = 27;
+
+function sampleQuestions() {
+  const bySection = Array.from({length: 8}, () => []);
+  ALL_QUESTIONS.forEach(q => bySection[q.s].push(q));
+
+  // Shuffle each section
+  bySection.forEach(arr => shuffle(arr));
+
+  // Ideal per-section count
+  const perSection = Math.floor(TARGET / 8);
+  let remainder    = TARGET - perSection * 8;
+
+  // Section sizes (capped by available)
+  const counts = bySection.map(arr => Math.min(arr.length, perSection));
+
+  // Distribute remainder to largest sections first
+  const order = [...counts.keys()].sort((a,b) => bySection[b].length - bySection[a].length);
+  for (const idx of order) {
+    if (remainder <= 0) break;
+    if (counts[idx] < bySection[idx].length) { counts[idx]++; remainder--; }
+  }
+
+  const sampled = [];
+  bySection.forEach((arr, i) => sampled.push(...arr.slice(0, counts[i])));
+
+  // Shuffle final order while keeping a rough section grouping
+  // Actually: interleave so topics alternate (better experience)
+  return interleave(bySection, counts);
+}
+
+function interleave(bySection, counts) {
+  const queues = bySection.map((arr, i) => arr.slice(0, counts[i]));
+  const result = [];
+  let any = true;
+  while (any) {
+    any = false;
+    queues.forEach(q => { if (q.length) { result.push(q.shift()); any = true; } });
+  }
+  return result;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─────────────────────────────────────────────
+//  GAME STATE
+// ─────────────────────────────────────────────
+let questions = [];
+let current   = 0;
+let score     = 0;
+let answered  = false;
+
+// Track per-section correct/total
+let sectionStats = Array.from({length: 8}, () => ({correct:0, total:0}));
+
+function startGame() {
+  questions = sampleQuestions();
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('q-count-label').textContent = questions.length;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  // Progress
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('q-label').textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById('score-running').textContent = `Score: ${score}`;
+
+  // Section label
+  document.getElementById('section-label').textContent = SECTIONS[q.s];
+
+  // Question text
+  document.getElementById('question-text').innerHTML = q.text;
+
+  // Multi-hint
+  const hint = document.getElementById('multi-hint');
+  q.multi ? hint.classList.remove('hidden') : hint.classList.add('hidden');
+
+  // Options
+  const letters = ['A','B','C','D','E','F','G'];
+  const container = document.getElementById('options');
+  container.innerHTML = '';
+
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.dataset.index = i;
+    div.innerHTML = `<div class="opt-letter">${letters[i]}</div><div class="opt-text">${opt}</div>`;
+    div.addEventListener('click', () => toggleOption(div, q));
+    container.appendChild(div);
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+
+  // Buttons
+  document.getElementById('btn-next').classList.add('hidden');
+  if (q.multi) {
+    document.getElementById('btn-submit').classList.remove('hidden');
+  } else {
+    document.getElementById('btn-submit').classList.add('hidden');
+  }
+}
+
+function toggleOption(div, q) {
+  if (answered) return;
+
+  if (q.multi) {
+    div.classList.toggle('selected');
+  } else {
+    // Single-select: auto-submit on click
+    document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    div.classList.add('selected');
+    submitAnswer();
+  }
+}
+
+function submitAnswer() {
+  if (answered) return;
+  const q = questions[current];
+  const selected = [...document.querySelectorAll('.option.selected')].map(o => parseInt(o.dataset.index));
+
+  if (selected.length === 0) return; // require selection
+
+  answered = true;
+  document.getElementById('btn-submit').classList.add('hidden');
+
+  // Compare
+  const correctSet = new Set(q.ans);
+  const selectedSet = new Set(selected);
+  const isCorrect = q.ans.length === selected.length && q.ans.every(a => selectedSet.has(a));
+
+  // Apply styles to all options
+  document.querySelectorAll('.option').forEach(o => {
+    o.classList.add('locked');
+    const idx = parseInt(o.dataset.index);
+    const wasPicked = selectedSet.has(idx);
+    const isAnswer  = correctSet.has(idx);
+
+    if (wasPicked && isAnswer)  o.classList.add('correct');
+    else if (wasPicked)         o.classList.add('wrong');
+    else if (isAnswer)          o.classList.add('reveal');
+  });
+
+  // Score
+  if (isCorrect) {
+    score++;
+    sectionStats[q.s].correct++;
+  }
+  sectionStats[q.s].total++;
+
+  // Feedback
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    fb.textContent = 'Correct!';
+    fb.className = 'feedback show-correct';
+  } else {
+    const letters = ['A','B','C','D','E','F','G'];
+    const correctLetters = q.ans.map(a => letters[a]).join(', ');
+    fb.textContent = `Not quite — the correct answer${q.ans.length > 1 ? 's are' : ' is'}: ${correctLetters}.`;
+    fb.className = 'feedback show-wrong';
+  }
+
+  document.getElementById('score-running').textContent = `Score: ${score}`;
+
+  // Show next / finish button
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.classList.remove('hidden');
+  nextBtn.textContent = current < questions.length - 1 ? 'Next Question' : 'See Results';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESULTS
+// ─────────────────────────────────────────────
+function showResults() {
+  document.getElementById('game').classList.add('hidden');
+  const res = document.getElementById('results');
+  res.style.display = 'flex';
+  res.style.flexDirection = 'column';
+  res.style.alignItems = 'center';
+
+  const total = questions.length;
+  const pct   = Math.round((score / total) * 100);
+
+  document.getElementById('res-score').textContent = score;
+  document.getElementById('res-denom').textContent = `/ ${total}`;
+  document.getElementById('res-pct').textContent   = `${pct}%`;
+
+  let msg = '';
+  if      (pct >= 90) msg = "Excellent work — you're well prepared!";
+  else if (pct >= 75) msg = "Good job! Review the highlighted topics to sharpen up.";
+  else if (pct >= 60) msg = "Not bad, but a few areas need attention before the exam.";
+  else                msg = "Keep studying — focus on the topics flagged below.";
+  document.getElementById('res-message').textContent = msg;
+
+  // Topic bars
+  const barsEl = document.getElementById('topic-bars');
+  barsEl.innerHTML = '';
+
+  // Collate only sections that appeared
+  const studyEl   = document.getElementById('study-list');
+  studyEl.innerHTML = '';
+  let anyBad = false;
+
+  SECTIONS.forEach((name, i) => {
+    const st = sectionStats[i];
+    if (st.total === 0) return;
+
+    const p = Math.round((st.correct / st.total) * 100);
+    const color = p >= 80 ? 'var(--correct)' : p >= 60 ? 'var(--accent)' : 'var(--wrong)';
+
+    const row = document.createElement('div');
+    row.className = 'topic-row';
+    row.innerHTML = `
+      <span class="topic-name">${name}</span>
+      <div class="topic-bar-wrap">
+        <div class="topic-bar-fill" style="width:${p}%;background:${color};"></div>
+      </div>
+      <span class="topic-pct">${p}%</span>`;
+    barsEl.appendChild(row);
+
+    const li = document.createElement('li');
+    li.textContent = `${name} — ${st.correct}/${st.total} correct (${p}%)`;
+    if (p >= 80) { li.classList.add('ok'); }
+    else         { anyBad = true; }
+    studyEl.appendChild(li);
+  });
+
+  if (!anyBad) {
+    const note = document.createElement('li');
+    note.className = 'ok';
+    note.textContent = 'All topics — you scored 80 %+ across the board. Great work!';
+    studyEl.appendChild(note);
+    document.getElementById('study-card').querySelector('h3').textContent = 'Topic Summary';
+  }
+}
+</script>
+</body>
+</html>
