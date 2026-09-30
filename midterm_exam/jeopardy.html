@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Midterm Jeopardy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #001C50;
+      --surface: #002570;
+      --tile:    #0A2E8A;
+      --tile-hi: #1440B0;
+      --accent:  #FFC72C;
+      --text:    #F0F4FF;
+      --muted:   #8BA3D4;
+      --correct: #2ECC71;
+      --wrong:   #E74C3C;
+      --radius:  10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      color: var(--accent);
+      text-align: center;
+      letter-spacing: .5px;
+    }
+
+    .subtitle { color: var(--muted); text-align: center; margin: .25rem 0 1.5rem; }
+
+    button {
+      padding: .6rem 1.3rem;
+      border-radius: var(--radius);
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity .15s, transform .1s;
+    }
+    button:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-ghost   { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+    .btn-small   { padding: .25rem .6rem; font-size: .85rem; }
+
+    .hidden { display: none !important; }
+
+    code {
+      background: rgba(255,255,255,.1);
+      border-radius: 4px;
+      padding: .1em .4em;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    pre.code {
+      background: #0B1430;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem auto;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: clamp(.95rem, 1.6vw, 1.25rem);
+      line-height: 1.5;
+      color: #D6E2FF;
+      text-align: left;
+      width: fit-content;
+      max-width: 100%;
+    }
+    pre.code code { background: none; padding: 0; }
+
+    .pv-wrap { margin: 1rem auto; max-width: 720px; text-align: left; }
+    .pv-label {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: .3rem;
+    }
+    .pv { border-radius: 6px; overflow: hidden; }
+
+    /* ── Setup ── */
+    #setup {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+    .setup-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+    }
+    .setup-card label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: .35rem; }
+    .setup-card select, .setup-card input {
+      width: 100%;
+      padding: .55rem .75rem;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,.15);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 1rem;
+    }
+    .setup-card select:focus, .setup-card input:focus { outline: none; border-color: var(--accent); }
+    .setup-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .5rem; }
+
+    .disclaimer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: .9rem;
+      font-style: italic;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    /* ── Board ── */
+    #game { padding: 1.25rem 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin: 1rem 0 1.25rem;
+    }
+
+    .cat-head {
+      background: var(--tile);
+      border-radius: 6px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: .5rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-size: clamp(.7rem, 1.4vw, 1.05rem);
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .tile {
+      background: var(--tile);
+      border-radius: 6px;
+      min-height: clamp(56px, 10vh, 100px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.2rem, 3.2vw, 2.6rem);
+      font-weight: 800;
+      color: var(--accent);
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s, transform .1s;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.35);
+    }
+    .tile:hover { background: var(--tile-hi); transform: scale(1.02); }
+    .tile.used { background: rgba(10,46,138,.3); color: transparent; text-shadow: none; cursor: default; transform: none; }
+
+    /* ── Scoreboard ── */
+    .scoreboard {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .team {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: .75rem 1.25rem;
+      min-width: 150px;
+      text-align: center;
+      border-top: 4px solid var(--accent);
+    }
+    .team-name { font-weight: 700; font-size: 1rem; margin-bottom: .2rem; }
+    .team-score { font-size: 1.9rem; font-weight: 800; color: var(--accent); }
+    .team-score.neg { color: var(--wrong); }
+    .team-adj { display: flex; gap: .35rem; justify-content: center; margin-top: .35rem; }
+    .team-adj button { background: rgba(255,255,255,.08); color: var(--muted); }
+
+    .game-actions { display: flex; gap: .75rem; justify-content: center; margin-top: 1.25rem; flex-wrap: wrap; }
+
+    /* ── Clue overlay ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 1.5rem 1rem 2rem;
+    }
+    .clue-inner {
+      max-width: 1000px;
+      width: 100%;
+      margin: auto;
+      text-align: center;
+    }
+    .clue-meta {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      font-size: clamp(.85rem, 1.5vw, 1.1rem);
+      margin-bottom: 1.25rem;
+    }
+    .clue-text {
+      font-size: clamp(1.3rem, 3vw, 2.2rem);
+      line-height: 1.4;
+      font-weight: 600;
+    }
+    .answer-box {
+      margin-top: 1.75rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 2px solid var(--accent);
+    }
+    .answer-text { font-size: clamp(1.2rem, 2.6vw, 1.9rem); font-weight: 800; color: var(--accent); }
+    .answer-why { margin-top: .75rem; color: var(--muted); font-size: clamp(.95rem, 1.6vw, 1.15rem); line-height: 1.6; }
+
+    .clue-controls { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+
+    .award-row { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; }
+    .award {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: .6rem .8rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .award span { font-weight: 700; margin-right: .25rem; }
+    .award button { width: 44px; padding: .4rem 0; font-size: 1.1rem; background: rgba(255,255,255,.08); color: var(--text); }
+    .award button.ok.on  { background: var(--correct); color: #fff; }
+    .award button.bad.on { background: var(--wrong);   color: #fff; }
+
+    .dd-banner {
+      font-size: clamp(2.5rem, 8vw, 6rem);
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 4px 4px 0 rgba(0,0,0,.4);
+      margin-bottom: 1rem;
+      animation: pop .5s ease;
+    }
+    @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .wager-row { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; align-items: center; }
+    .wager-row label { color: var(--muted); font-weight: 600; }
+    .wager-row input, .wager-row select {
+      padding: .5rem .7rem;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,.15);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      width: 130px;
+    }
+    .wager-row select { width: auto; }
+
+    .hint { color: var(--muted); font-size: .85rem; }
+
+    .winner { font-size: clamp(1.6rem, 4vw, 3rem); font-weight: 900; color: var(--accent); margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- SETUP -->
+  <div id="setup">
+    <h1>Midterm Jeopardy</h1>
+    <p class="subtitle">Team Review — CSCI 1210</p>
+
+    <div class="setup-card">
+      <label for="team-count">Number of teams</label>
+      <select id="team-count" onchange="renderTeamInputs()">
+        <option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+      </select>
+      <div id="team-inputs"></div>
+      <div class="setup-actions">
+        <button class="btn-primary" onclick="newGame()">Start Game</button>
+        <button class="btn-ghost hidden" id="btn-resume" onclick="resumeGame()">Resume Saved Game</button>
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      Disclaimer: This review game was generated by Claude, based closely on our CSCI-1210 materials.
+      Although I have done a cursory review of all questions, if you notice a discrepancy,
+      let me know and refer back to our course materials (lecture slides and past quizzes).
+      -RH
+    </p>
+  </div>
+
+  <!-- BOARD -->
+  <div id="game" class="hidden">
+    <h1>Midterm Jeopardy</h1>
+    <div class="board" id="board"></div>
+    <div class="scoreboard" id="scoreboard"></div>
+    <div class="game-actions">
+      <button class="btn-primary" onclick="openFinal()">Final Jeopardy</button>
+      <button class="btn-ghost" onclick="backToSetup()">New Game</button>
+    </div>
+  </div>
+
+  <!-- CLUE -->
+  <div id="clue" class="overlay hidden">
+    <div class="clue-inner">
+      <div id="dd-splash" class="hidden">
+        <div class="dd-banner">DAILY DOUBLE!</div>
+        <div class="wager-row">
+          <label for="dd-team">Team</label>
+          <select id="dd-team"></select>
+          <label for="dd-wager">Wager</label>
+          <input type="number" id="dd-wager" min="0" step="100" value="500">
+        </div>
+        <p class="hint" style="margin-top:.75rem">Max wager: the team's score or $500, whichever is higher.</p>
+        <div class="clue-controls"><button class="btn-primary" onclick="showDDClue()">Show Clue</button></div>
+      </div>
+
+      <div id="clue-body">
+        <div class="clue-meta" id="clue-meta"></div>
+        <div class="clue-text" id="clue-text"></div>
+        <div class="answer-box hidden" id="answer-box">
+          <div class="answer-text" id="answer-text"></div>
+          <div class="answer-why" id="answer-why"></div>
+        </div>
+        <div class="clue-controls">
+          <button class="btn-primary" id="btn-reveal" onclick="reveal()">Reveal Answer <span class="hint">(Space)</span></button>
+          <div class="award-row" id="award-row"></div>
+          <button class="btn-ghost" onclick="closeClue()">Back to Board <span class="hint">(Esc)</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL JEOPARDY -->
+  <div id="final" class="overlay hidden">
+    <div class="clue-inner">
+      <div class="dd-banner" style="font-size:clamp(2rem,6vw,4.5rem)">FINAL JEOPARDY</div>
+      <div class="clue-meta" id="final-cat"></div>
+
+      <div id="final-wagers">
+        <p class="hint" style="margin-bottom:1rem">Teams write down their wagers secretly, then the host enters them here.</p>
+        <div class="award-row" id="final-wager-inputs"></div>
+        <div class="clue-controls"><button class="btn-primary" onclick="showFinalClue()">Show Clue</button></div>
+      </div>
+
+      <div id="final-body" class="hidden">
+        <div class="clue-text" id="final-text"></div>
+        <div class="answer-box hidden" id="final-answer">
+          <div class="answer-text" id="final-answer-text"></div>
+          <div class="answer-why" id="final-answer-why"></div>
+        </div>
+        <div class="clue-controls">
+          <button class="btn-primary" id="btn-final-reveal" onclick="revealFinal()">Reveal Answer</button>
+          <div class="award-row" id="final-award-row"></div>
+          <div class="winner hidden" id="winner"></div>
+        </div>
+      </div>
+
+      <div class="clue-controls">
+        <button class="btn-ghost" onclick="closeFinal()">Back to Board</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ─────────────────────────────────────────────
+//  HELPERS for building clue content
+// ─────────────────────────────────────────────
+function esc(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Code block: raw HTML/CSS source is displayed, not rendered
+function C(src) {
+  return `<pre class="code"><code>${esc(src.trim())}</code></pre>`;
+}
+
+// Inline code
+function I(src) {
+  return `<code>${esc(src)}</code>`;
+}
+
+// Rendered preview in an isolated shadow root
+function V(html, label = 'Browser output') {
+  const lbl = label ? `<div class="pv-label">${label}</div>` : '';
+  return `<div class="pv-wrap">${lbl}<div class="pv" data-pv="${encodeURIComponent(html)}"></div></div>`;
+}
+
+// Color swatch for answers
+function swatch(hex, name) {
+  return V(`<div style="display:flex;align-items:center;gap:16px;font-family:Arial,sans-serif;font-size:20px;">
+    <div style="width:120px;height:60px;background:${hex};border:1px solid #999;"></div>
+    <span>${hex} = ${name}</span></div>`, '');
+}
+
+function hydratePreviews(root) {
+  root.querySelectorAll('.pv:not([data-done])').forEach(el => {
+    el.dataset.done = '1';
+    const shadow = el.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        :host { all: initial; display: block; }
+        .frame {
+          background: #fff; color: #111;
+          font-family: "Times New Roman", serif; font-size: 18px; line-height: normal;
+          padding: 16px 20px; overflow: auto;
+        }
+      </style>
+      <div class="frame">${decodeURIComponent(el.dataset.pv)}</div>`;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  CLUES — 6 categories × 5 values
+//  Each clue: { q (clue HTML), a (answer HTML), why? (host explanation) }
+// ─────────────────────────────────────────────
+const VALUES = [100, 200, 300, 400, 500];
+
+const CATEGORIES = [
+  { name: "HTML Anatomy", clues: [
+    { q: "This element turns text (or an image) into a clickable hyperlink.",
+      a: I("<a>") + " (the anchor element)",
+      why: "Its " + I("href") + " attribute holds the destination." },
+
+    { q: "The browser displays this indented quotation. Which element produced it?" +
+         V(`<p>Tim Berners-Lee once wrote:</p>
+<blockquote>The power of the Web is in its universality. Access by everyone regardless of disability is an essential aspect.</blockquote>`),
+      a: I("<blockquote>"),
+      why: "Use " + I("<blockquote>") + " for longer, block-level quotations. It's indented by default. For short inline quotes, use " + I("<q>") + "." },
+
+    { q: "The text inside this element in the " + I("<head>") + " never appears on the page. Instead it shows up in the <strong>browser tab</strong>.",
+      a: I("<title>"),
+      why: "The title also shows up in bookmarks and search results. Don't confuse it with " + I("<h1>") + ", which is visible on the page." },
+
+    { q: "In a table, what do the letters in " + I("<tr>") + " and " + I("<td>") + " stand for?",
+      a: "Table row and table data (cell)",
+      why: "Tables are built row by row: each " + I("<tr>") + " holds its " + I("<td>") + " (or " + I("<th>") + " header) cells." },
+
+    { q: "Is " + I("<em>") + " block-level or inline, and how does the browser display it by default?" +
+         C(`<p>Please <em>do not</em> feed the ducks.</p>`),
+      a: "Inline, displayed in <em>italics</em>",
+      why: "Inline elements stay within the line of text. " + I("<em>") + " means emphasis, much like " + I("<strong>") + " means strong importance (bold)." },
+  ]},
+
+  { name: "Fix the Code", clues: [
+    { q: "Find the error:" + C(`<h1>Welcome to My Portfolio</h2>`),
+      a: "The closing tag doesn't match: it should be " + I("</h1>"),
+      why: "Every closing tag has to match the opening tag it closes." },
+
+    { q: "Find the error:" + C(`<a href=about.html">About Me</a>`),
+      a: "The opening quotation mark is missing before " + I("about.html"),
+      why: "Attribute values need a quote on both sides: " + I('href="about.html"') + "." },
+
+    { q: "The validator reports <em>\"Stray end tag img.\"</em> What's wrong?" + C(`<img src="images/dog.jpg" alt="My dog Rufus"></img>`),
+      a: I("<img>") + " is a standalone (void) element and has no closing tag",
+      why: "Delete " + I("</img>") + ". Other standalone elements include " + I("<br>") + ", " + I("<hr>") + ", and " + I("<link>") + "." },
+
+    { q: "This CSS has no effect. Find the error:" + C(`p {
+  font-size 18px;
+}`),
+      a: "The colon is missing after " + I("font-size"),
+      why: "Every declaration is written as " + I("property: value;") + "." },
+
+    { q: "Find the error. <em>(Hint: think about block vs. inline.)</em>" + C(`<p>Our team:
+  <div class="staff">Ava, Ben, and Cy</div>
+</p>`),
+      a: "A block-level " + I("<div>") + " can't be nested inside a " + I("<p>"),
+      why: "Paragraphs can only contain inline content. The browser closes the " + I("<p>") + " early, and the stray " + I("</p>") + " becomes an error." },
+  ]},
+
+  { name: "Style Points", clues: [
+    { q: "This single character begins a <strong>class</strong> selector in CSS.",
+      a: "A period (dot) " + I("."),
+      why: "For example, " + I(".highlight { }") + ". The " + I("#") + " character is for IDs." },
+
+    { q: "Name all <strong>three</strong> ways to apply CSS to an HTML document.",
+      a: "Inline, embedded (internal), and external",
+      why: "Inline goes in a " + I("style") + " attribute. Embedded goes in a " + I("<style>") + " block in the " + I("<head>") + ". External is a " + I(".css") + " file linked with " + I("<link>") + "." },
+
+    { q: "An external stylesheet says " + I("#logo { width: 200px; }") + ". The page's embedded " + I("<style>") + " says " + I("img { width: 100px; }") +
+         ". How wide is " + I('<img id="logo" …>') + "?",
+      a: "200px",
+      why: "Specificity is checked before order. An ID selector beats an element selector, no matter which stylesheet it's in." },
+
+    { q: "In plain English, what does this selector select?" + C(`header nav a:hover { color: gold; }`),
+      a: "Links inside a " + I("<nav>") + " inside the " + I("<header>") + ", while the mouse is over them",
+      why: "Spaces mean \"inside of\" (contextual selectors). " + I(":hover") + " is a pseudo-class." },
+
+    { q: "The HTML is " + I("<p class=\"motto\">Code, test, repeat.</p>") + ". Name the <strong>two</strong> CSS property/value pairs that produce this:" +
+         V(`<p style="text-align:center;font-style:italic;margin:0;">Code, test, repeat.</p>`),
+      a: I("text-align: center;") + " and " + I("font-style: italic;"),
+      why: "Watch out: " + I("font-weight") + " controls bold. " + I("font-style") + " controls italic." },
+  ]},
+
+  { name: "Hex Appeal", clues: [
+    { q: "What color is " + I("#00FF00") + "?",
+      a: "Green (bright \"lime\" green)" + swatch('#00FF00', 'green'),
+      why: "The hex pairs are <strong>RR GG BB</strong>. Here red = 00 (off), green = FF (full), and blue = 00 (off)." },
+
+    { q: "What color is " + I("#FFFF00") + "?",
+      a: "Yellow" + swatch('#FFFF00', 'yellow'),
+      why: "Red at full (FF) + green at full (FF) + no blue = yellow. Screens mix <em>light</em>, not paint." },
+
+    { q: "What color is " + I("#FF00FF") + "?",
+      a: "Magenta (fuchsia)" + swatch('#FF00FF', 'magenta'),
+      why: "Red at full + blue at full + no green = magenta." },
+
+    { q: "What color is " + I("#808080") + ", and is it lighter or darker than " + I("#333333") + "?",
+      a: "Gray, and it's <strong>lighter</strong> than #333333" + swatch('#808080', 'gray') + swatch('#333333', 'dark gray'),
+      why: "When all three pairs are equal, you get a shade of gray. Higher values mean more light: 80 is halfway, and 33 is much darker." },
+
+    { q: "Write <strong>pure blue</strong> two ways: once as a hex code and once using " + I("rgb()") + ".",
+      a: I("#0000FF") + " and " + I("rgb(0, 0, 255)") + swatch('#0000FF', 'blue'),
+      why: "FF in hex = 255 in decimal. Both formats go in red, green, blue order." },
+  ]},
+
+  { name: "Protocols & Paths", clues: [
+    { q: "Browsers use this protocol to request web pages, and servers use it to send them back.",
+      a: "HTTP (HyperText Transfer Protocol)",
+      why: "HTTPS is the secure, encrypted version." },
+
+    { q: "This system translates a name like " + I("www.etsu.edu") + " into the numeric IP address computers need.",
+      a: "DNS (Domain Name System)",
+      why: "It's like the internet's phone book. It works in reverse too, from IP address back to name." },
+
+    { q: "Your site works on your laptop. Name the protocol traditionally used to <strong>upload</strong> the files to your web server.",
+      a: "FTP (File Transfer Protocol), or its secure form SFTP",
+      why: "FTP moves files between computers. HTTP is what delivers the finished pages to visitors." },
+
+    { q: "You type " + I("www.example.com/index.html") + " and press Enter. Which happens <strong>first</strong>: the DNS lookup or the HTTP request? Explain why.",
+      a: "The DNS lookup comes first",
+      why: "The browser can't send an HTTP request until DNS tells it the server's IP address. After that, the server responds with the HTML." },
+
+    { q: "Here's the site's folder structure:" + C(`my-site/
+├── index.html
+├── css/
+│   └── style.css
+└── images/
+    └── bg.jpg`) + "Inside <strong>style.css</strong>, write the URL for " + I("bg.jpg") + ":" + C(`body { background-image: url("???"); }`),
+      a: I("../images/bg.jpg"),
+      why: "Paths in a CSS file are relative to <em>the CSS file</em>, not the HTML page. Go up out of " + I("css/") + " and then down into " + I("images/") + "." },
+  ]},
+
+  { name: "Pixels & Principles", clues: [
+    { q: "In the box model, this layer sits between the <strong>content</strong> and the <strong>border</strong>.",
+      a: "Padding",
+      why: "Inside to outside, the layers are content, padding, border, margin." },
+
+    { q: "This Gestalt principle is about telling an object apart from the background behind it.",
+      a: "Figure/Ground",
+      why: "Low contrast or busy backgrounds make the \"figure\" hard to pick out." },
+
+    { q: "The blue box is an image. Name the CSS property and value that produce this layout." +
+         V(`<div style="font-family:Arial,sans-serif;font-size:16px;line-height:1.5;">
+  <div style="float:right;width:110px;height:80px;background:#5B8DD6;margin:0 0 8px 14px;"></div>
+  The campus garden opened in spring and now grows tomatoes, peppers, and herbs for the dining hall.
+  Volunteers meet every Saturday morning, and no experience is needed. Gloves and tools are provided.
+</div>`),
+      a: I("float: right;"),
+      why: "Floating the image pushes it to the right edge and lets the text wrap around its left side. " + I("text-align") + " only affects inline content, not layout." },
+
+    { q: "How much <strong>total horizontal space</strong> does this box take up, <em>including</em> its margins? (default box-sizing)" + C(`.card {
+  width: 250px;
+  padding: 15px;
+  border: 2px solid gray;
+  margin: 20px;
+}`),
+      a: "324px",
+      why: "250 (content) + 30 (padding, both sides) + 4 (border, both sides) + 40 (margin, both sides) = 324px." },
+
+    { q: "A " + I(".tooltip") + " has " + I("position: absolute; top: 0; left: 0;") + ", but <strong>none</strong> of its ancestors are positioned. Where does it end up?",
+      a: "At the top-left corner of the page (the document/body)",
+      why: "An absolute element is placed relative to its nearest <em>positioned</em> ancestor. If there isn't one, it falls back to the page itself. Add " + I("position: relative") + " to the parent to change this." },
+  ]},
+];
+
+const FINAL = {
+  category: "Finding Your Way Home",
+  q: "Here's the site's folder structure:" + C(`my-site/
+├── index.html
+└── pages/
+    └── blog/
+        └── post.html`) + "Write the " + I("<a>") + " tag in <strong>post.html</strong> that links back to the home page, " + I("index.html") + ".",
+  a: I('<a href="../../index.html">Home</a>'),
+  why: "Each " + I("../") + " goes up one folder: from " + I("blog/") + " to " + I("pages/") + ", then up to " + I("my-site/") + ". Link text can be anything, but the path must be exact."
+};
+
+// ─────────────────────────────────────────────
+//  STATE (saved to localStorage so a refresh doesn't lose the game)
+// ─────────────────────────────────────────────
+const SAVE_KEY = 'csci1210-midterm-jeopardy';
+let state = null;
+let openKey = null;
+
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function load() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
+}
+
+function clueKey(c, r) { return `${c}-${r}`; }
+
+function scoreOf(t) {
+  let total = state.teams[t].adj;
+  for (const [key, res] of Object.entries(state.results)) {
+    if (res[t] === undefined) continue;
+    const [c, r] = key.split('-').map(Number);
+    const val = key === state.dd ? (state.ddWager || 0) : VALUES[r];
+    total += res[t] * val;
+  }
+  if (state.final.results[t] !== undefined) {
+    total += state.final.results[t] * (state.final.wagers[t] || 0);
+  }
+  return total;
+}
+
+// ─────────────────────────────────────────────
+//  SETUP
+// ─────────────────────────────────────────────
+function renderTeamInputs() {
+  const n = +document.getElementById('team-count').value;
+  const wrap = document.getElementById('team-inputs');
+  const existing = [...wrap.querySelectorAll('input')].map(i => i.value);
+  wrap.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    wrap.insertAdjacentHTML('beforeend',
+      `<label for="team-${i}">Team ${i + 1} name</label>
+       <input id="team-${i}" value="${esc(existing[i] || 'Team ' + (i + 1))}">`);
+  }
+}
+
+function newGame() {
+  const n = +document.getElementById('team-count').value;
+  const teams = [];
+  for (let i = 0; i < n; i++) {
+    teams.push({ name: document.getElementById(`team-${i}`).value.trim() || `Team ${i + 1}`, adj: 0 });
+  }
+  // Daily Double: random tile, never in the $100 row
+  const dd = clueKey(Math.floor(Math.random() * CATEGORIES.length), 1 + Math.floor(Math.random() * 4));
+  state = { teams, used: [], results: {}, dd, ddTeam: 0, ddWager: 0,
+            final: { wagers: {}, results: {} } };
+  save();
+  showBoard();
+}
+
+function resumeGame() {
+  state = load();
+  if (state) showBoard();
+}
+
+function backToSetup() {
+  if (!confirmNewGame()) return;
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('setup').classList.remove('hidden');
+  document.getElementById('btn-resume').classList.toggle('hidden', !load());
+}
+
+// Two-click confirm (avoids a blocking browser dialog)
+let confirmTimer = null;
+function confirmNewGame() {
+  const btn = document.querySelector('.game-actions .btn-ghost');
+  if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = 'New Game'; return true; }
+  btn.dataset.armed = '1';
+  btn.textContent = 'Click again to confirm';
+  clearTimeout(confirmTimer);
+  confirmTimer = setTimeout(() => { delete btn.dataset.armed; btn.textContent = 'New Game'; }, 3000);
+  return false;
+}
+
+// ─────────────────────────────────────────────
+//  BOARD
+// ─────────────────────────────────────────────
+function showBoard() {
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  renderBoard();
+  renderScores();
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    board.insertAdjacentHTML('beforeend', `<div class="cat-head">${cat.name}</div>`);
+  });
+  VALUES.forEach((val, r) => {
+    CATEGORIES.forEach((cat, c) => {
+      const key = clueKey(c, r);
+      const tile = document.createElement('div');
+      tile.className = 'tile' + (state.used.includes(key) ? ' used' : '');
+      tile.textContent = `$${val}`;
+      tile.addEventListener('click', () => { if (!state.used.includes(key)) openClue(c, r); });
+      board.appendChild(tile);
+    });
+  });
+}
+
+function renderScores() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  state.teams.forEach((team, t) => {
+    const s = scoreOf(t);
+    sb.insertAdjacentHTML('beforeend', `
+      <div class="team">
+        <div class="team-name">${esc(team.name)}</div>
+        <div class="team-score ${s < 0 ? 'neg' : ''}">${s < 0 ? '-' : ''}$${Math.abs(s)}</div>
+        <div class="team-adj">
+          <button class="btn-small" onclick="adjust(${t}, -100)" title="Subtract $100">−100</button>
+          <button class="btn-small" onclick="adjust(${t}, 100)" title="Add $100">+100</button>
+        </div>
+      </div>`);
+  });
+}
+
+function adjust(t, amt) {
+  state.teams[t].adj += amt;
+  save();
+  renderScores();
+}
+
+// ─────────────────────────────────────────────
+//  CLUE
+// ─────────────────────────────────────────────
+function openClue(c, r) {
+  openKey = clueKey(c, r);
+  const clue = CATEGORIES[c].clues[r];
+  const isDD = openKey === state.dd;
+
+  document.getElementById('clue-meta').textContent =
+    `${CATEGORIES[c].name} — ${isDD ? 'Daily Double' : '$' + VALUES[r]}`;
+  const qEl = document.getElementById('clue-text');
+  qEl.innerHTML = clue.q;
+  document.getElementById('answer-text').innerHTML = clue.a;
+  document.getElementById('answer-why').innerHTML = clue.why || '';
+  document.getElementById('answer-box').classList.add('hidden');
+  document.getElementById('btn-reveal').classList.remove('hidden');
+  hydratePreviews(qEl);
+
+  if (isDD) {
+    const sel = document.getElementById('dd-team');
+    sel.innerHTML = state.teams.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join('');
+    sel.value = state.ddTeam;
+    document.getElementById('dd-wager').value = state.ddWager || 500;
+    document.getElementById('dd-splash').classList.remove('hidden');
+    document.getElementById('clue-body').classList.add('hidden');
+  } else {
+    document.getElementById('dd-splash').classList.add('hidden');
+    document.getElementById('clue-body').classList.remove('hidden');
+  }
+
+  renderAwards();
+  document.getElementById('clue').classList.remove('hidden');
+}
+
+function showDDClue() {
+  state.ddTeam  = +document.getElementById('dd-team').value;
+  state.ddWager = Math.max(0, +document.getElementById('dd-wager').value || 0);
+  save();
+  const [c] = openKey.split('-').map(Number);
+  document.getElementById('clue-meta').textContent =
+    `${CATEGORIES[c].name} — Daily Double: ${state.teams[state.ddTeam].name} wagers $${state.ddWager}`;
+  document.getElementById('dd-splash').classList.add('hidden');
+  document.getElementById('clue-body').classList.remove('hidden');
+  renderAwards();
+}
+
+function renderAwards() {
+  const row = document.getElementById('award-row');
+  const res = state.results[openKey] || {};
+  const isDD = openKey === state.dd;
+  row.innerHTML = '';
+  state.teams.forEach((team, t) => {
+    if (isDD && t !== state.ddTeam) return;  // only the wagering team plays a Daily Double
+    row.insertAdjacentHTML('beforeend', `
+      <div class="award">
+        <span>${esc(team.name)}</span>
+        <button class="ok ${res[t] === 1 ? 'on' : ''}"  onclick="mark(${t}, 1)"  title="Correct">✓</button>
+        <button class="bad ${res[t] === -1 ? 'on' : ''}" onclick="mark(${t}, -1)" title="Incorrect">✗</button>
+      </div>`);
+  });
+}
+
+// Toggle a team's result for the open clue (click again to undo)
+function mark(t, val) {
+  const res = state.results[openKey] || (state.results[openKey] = {});
+  if (res[t] === val) delete res[t]; else res[t] = val;
+  save();
+  renderAwards();
+}
+
+function reveal() {
+  const box = document.getElementById('answer-box');
+  box.classList.remove('hidden');
+  hydratePreviews(box);
+  document.getElementById('btn-reveal').classList.add('hidden');
+}
+
+function closeClue() {
+  if (openKey && !state.used.includes(openKey)) state.used.push(openKey);
+  openKey = null;
+  save();
+  document.getElementById('clue').classList.add('hidden');
+  renderBoard();
+  renderScores();
+}
+
+// ─────────────────────────────────────────────
+//  FINAL JEOPARDY
+// ─────────────────────────────────────────────
+function openFinal() {
+  document.getElementById('final-cat').textContent = `Category: ${FINAL.category}`;
+  const inputs = document.getElementById('final-wager-inputs');
+  inputs.innerHTML = state.teams.map((team, t) => `
+    <div class="award wager-row">
+      <label for="fw-${t}">${esc(team.name)} <span class="hint">(has $${scoreOf(t) - (state.final.results[t] || 0) * (state.final.wagers[t] || 0)})</span></label>
+      <input type="number" id="fw-${t}" min="0" step="100" value="${state.final.wagers[t] || 0}">
+    </div>`).join('');
+
+  const text = document.getElementById('final-text');
+  text.innerHTML = FINAL.q;
+  document.getElementById('final-answer-text').innerHTML = FINAL.a;
+  document.getElementById('final-answer-why').innerHTML = FINAL.why;
+  document.getElementById('final-answer').classList.add('hidden');
+  document.getElementById('btn-final-reveal').classList.remove('hidden');
+  document.getElementById('winner').classList.add('hidden');
+  document.getElementById('final-wagers').classList.remove('hidden');
+  document.getElementById('final-body').classList.add('hidden');
+  hydratePreviews(text);
+  document.getElementById('final').classList.remove('hidden');
+}
+
+function showFinalClue() {
+  state.teams.forEach((_, t) => {
+    state.final.wagers[t] = Math.max(0, +document.getElementById(`fw-${t}`).value || 0);
+  });
+  save();
+  document.getElementById('final-wagers').classList.add('hidden');
+  document.getElementById('final-body').classList.remove('hidden');
+  renderFinalAwards();
+}
+
+function revealFinal() {
+  const box = document.getElementById('final-answer');
+  box.classList.remove('hidden');
+  hydratePreviews(box);
+  document.getElementById('btn-final-reveal').classList.add('hidden');
+}
+
+function renderFinalAwards() {
+  const row = document.getElementById('final-award-row');
+  const res = state.final.results;
+  row.innerHTML = state.teams.map((team, t) => `
+    <div class="award">
+      <span>${esc(team.name)} ($${state.final.wagers[t] || 0})</span>
+      <button class="ok ${res[t] === 1 ? 'on' : ''}"  onclick="markFinal(${t}, 1)"  title="Correct">✓</button>
+      <button class="bad ${res[t] === -1 ? 'on' : ''}" onclick="markFinal(${t}, -1)" title="Incorrect">✗</button>
+    </div>`).join('');
+
+  // Announce the winner once every team has been marked
+  const allMarked = state.teams.every((_, t) => res[t] !== undefined);
+  const winEl = document.getElementById('winner');
+  if (allMarked) {
+    const scores = state.teams.map((_, t) => scoreOf(t));
+    const best = Math.max(...scores);
+    const names = state.teams.filter((_, t) => scores[t] === best).map(t => t.name);
+    winEl.textContent = `🏆 ${names.join(' & ')} ${names.length > 1 ? 'tie' : 'wins'} with $${best}!`;
+    winEl.classList.remove('hidden');
+  } else {
+    winEl.classList.add('hidden');
+  }
+}
+
+function markFinal(t, val) {
+  const res = state.final.results;
+  if (res[t] === val) delete res[t]; else res[t] = val;
+  save();
+  renderFinalAwards();
+}
+
+function closeFinal() {
+  document.getElementById('final').classList.add('hidden');
+  renderScores();
+}
+
+// ─────────────────────────────────────────────
+//  KEYBOARD: Space = reveal, Esc = back to board
+// ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const clueOpen = !document.getElementById('clue').classList.contains('hidden');
+  if (!clueOpen) return;
+  if (e.key === ' ' && !document.getElementById('clue-body').classList.contains('hidden')) {
+    e.preventDefault();
+    reveal();
+  } else if (e.key === 'Escape') {
+    closeClue();
+  }
+});
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderTeamInputs();
+if (load()) document.getElementById('btn-resume').classList.remove('hidden');
+</script>
+</body>
+</html>
